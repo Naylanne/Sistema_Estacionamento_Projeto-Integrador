@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Estacionamento - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <!-- Logo centralizado -->
+            <div class="logo-container">
+                <img src="images/unieuro.png" alt="Logo Unieuro" class="logo">
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="loginForm" class="login-form">
+                <h2>Acessar Sistema</h2>
+                
+                <div class="form-group">
+                    <label for="cpf">CPF:</label>
+                    <input type="text" id="cpf" name="cpf" placeholder="Digite seu CPF" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipoUsuario">Tipo de Usuário:</label>
+                    <select id="tipoUsuario" name="tipoUsuario" required>
+                        <option value="">Selecione...</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="admin">Administrador/Funcionário</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-login">Entrar</button>
+
+                <div class="login-links">
+                    <a href="#" id="btnCadastro">Cadastrar novo usuário</a>
+                    <a href="#" id="btnRecuperarSenha">Esqueci minha senha</a>
+                </div>
+            </form>
+
+            <!-- Formulário de Cadastro (hidden) -->
+            <form id="cadastroForm" class="login-form hidden">
+                <h2>Cadastrar Usuário</h2>
+                
+                <div class="form-group">
+                    <label for="cadNome">Nome Completo:</label>
+                    <input type="text" id="cadNome" name="cadNome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadCpf">CPF:</label>
+                    <input type="text" id="cadCpf" name="cadCpf" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadDataNasc">Data de Nascimento:</label>
+                    <input type="date" id="cadDataNasc" name="cadDataNasc" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadTelefone">Telefone:</label>
+                    <input type="tel" id="cadTelefone" name="cadTelefone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadEndereco">Endereço:</label>
+                    <input type="text" id="cadEndereco" name="cadEndereco" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadSenha">Senha:</label>
+                    <input type="password" id="cadSenha" name="cadSenha" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cadTipoUsuario">Tipo de Usuário:</label>
+                    <select id="cadTipoUsuario" name="cadTipoUsuario" required>
+                        <option value="cliente">Cliente</option>
+                        <option value="admin">Administrador/Funcionário</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-login">Cadastrar</button>
+                <button type="button" id="btnVoltarLogin" class="btn-voltar">Voltar para Login</button>
+            </form>
+
+            <!-- Recuperação de Senha (hidden) -->
+            <form id="recuperarSenhaForm" class="login-form hidden">
+                <h2>Recuperar Senha</h2>
+                
+                <div class="form-group">
+                    <label for="recuperarCpf">CPF:</label>
+                    <input type="text" id="recuperarCpf" name="recuperarCpf" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="recuperarEmail">E-mail:</label>
+                    <input type="email" id="recuperarEmail" name="recuperarEmail" required>
+                </div>
+
+                <button type="submit" class="btn-login">Recuperar Senha</button>
+                <button type="button" id="btnVoltarLogin2" class="btn-voltar">Voltar para Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

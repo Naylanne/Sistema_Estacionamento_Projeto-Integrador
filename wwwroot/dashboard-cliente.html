@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Cliente - Sistema de Estacionamento</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="images/unieuro.png" alt="Logo Unieuro" class="logo-small">
+                    <h1>Sistema de Estacionamento - Área do Cliente</h1>
+                </div>
+                <div class="user-section">
+                    <span>Bem-vindo, Cliente</span>
+                    <a href="index.html" class="btn-logout">Sair</a>
+                </div>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <ul>
+                <li><a href="#dashboard" class="nav-link active" data-target="dashboard">Meu Dashboard</a></li>
+                <li><a href="#meus-dados" class="nav-link" data-target="meus-dados">Meus Dados</a></li>
+                <li><a href="#meus-veiculos" class="nav-link" data-target="meus-veiculos">Meus Veículos</a></li>
+                <li><a href="#pagamentos" class="nav-link" data-target="pagamentos">Pagamentos</a></li>
+                <li><a href="#historico" class="nav-link" data-target="historico">Histórico</a></li>
+                <li><a href="#avisos" class="nav-link" data-target="avisos">Avisos</a></li>
+                <li><a href="#feedbacks" class="nav-link" data-target="feedbacks">Feedback</a></li>
+                <li><a href="#suporte" class="nav-link" data-target="suporte">Suporte</a></li>
+            </ul>
+        </nav>
+
+        <main class="admin-main">
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h2>Meu Dashboard</h2>
+                    <p>Visão geral do seu estacionamento atual</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🚗</div>
+                        <div class="stat-info">
+                            <h3>Status Atual</h3>
+                            <span class="stat-number">Ausente</span>
+                            <span class="stat-total">Sem veículo estacionado</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-info">
+                            <h3>Tempo Atual</h3>
+                            <span class="stat-number">--:--</span>
+                            <span class="stat-total"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <h3>Valor Estimado</h3>
+                            <span class="stat-number">R$ 0,00</span>
+                            <span class="stat-total">*Estimado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="content-column">
+                        <div class="content-card">
+                            <h3>Veículo Estacionado</h3>
+                            <div class="veiculo-info">
+                                <div class="veiculo-detalhes">
+                                    <div class="placa-badge">---</div>
+                                    <div class="veiculo-modelo">Nenhum veículo ativo</div>
+                                    <div class="vaga-info">Vaga: -</div>
+                                </div>
+                                <button class="btn-primary" onclick="abrirModal('modalPagamento')" disabled>
+                                    Nenhum veículo estacionado
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-column">
+                        <div class="content-card">
+                            <h3>Últimos Estacionamentos</h3>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Entrada</th>
+                                            <th>Saída</th>
+                                            <th>Placa</th>
+                                            <th>Vaga</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaDashboard"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="meus-dados" class="content-section"><div class="section-header"><h2>Meus Dados</h2></div><div class="content-card"><div class="dados-pessoais"><h3>Informações Pessoais</h3><div class="dados-grid"><div class="dado-item"><label>Nome:</label><span>...</span></div><div class="dado-item"><label>CPF:</label><span>...</span></div><div class="dado-item"><label>Telefone:</label><span>...</span></div><div class="dado-item full-width"><label>Endereço:</label><span>...</span></div></div><button class="btn-primary" onclick="abrirModal('modalEditarDados')">Editar</button></div></div></section>
+            
+            <section id="meus-veiculos" class="content-section">
+                <div class="section-header"><h2>Meus Veículos</h2></div>
+                <div class="content-actions"><button class="btn-primary" onclick="abrirModal('modalNovoVeiculoCliente')">+ Cadastrar Veículo</button></div>
+                <div class="veiculos-grid"></div>
+            </section>
+
+            <section id="pagamentos" class="content-section">
+                <div class="section-header"><h2>Pagamentos</h2></div>
+                <div class="table-container"><table class="data-table"><thead><tr><th>Entrada</th><th>Saída</th><th>Placa</th><th>Vaga</th><th>Valor</th></tr></thead><tbody id="tabelaPagamentos"></tbody></table></div>
+            </section>
+
+            <section id="historico" class="content-section">
+                <div class="section-header"><h2>Histórico</h2></div>
+                <div class="table-container"><table class="data-table"><thead><tr><th>Entrada</th><th>Saída</th><th>Placa</th><th>Vaga</th><th>Valor</th></tr></thead><tbody id="tabelaHistorico"></tbody></table></div>
+            </section>
+
+            <section id="avisos" class="content-section"><div class="section-header"><h2>Avisos</h2></div><div class="avisos-list"></div></section>
+            <section id="feedbacks" class="content-section"><div class="section-header"><h2>Feedback</h2></div><div class="content-actions"><button class="btn-primary" onclick="abrirModal('modalNovoFeedback')">+ Novo Feedback</button></div><div class="feedbacks-list"></div></section>
+            <section id="suporte" class="content-section"><div class="section-header"><h2>Suporte</h2></div><div class="suporte-content"><p>Contate a administração.</p></div></section>
+        </main>
+    </div>
+
+    <div id="modalPagamento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Realizar Pagamento</h3>
+                <span class="close" onclick="fecharModal('modalPagamento')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="resumo-pagamento">
+                    <h4>Resumo do Pagamento</h4>
+                    <div class="resumo-item">
+                        <span>Veículo:</span>
+                        <span id="resumoPlaca">Carregando...</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span>Tempo Total:</span>
+                        <span id="resumoTempo">--:--</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span>Valor Estimado:</span>
+                        <span id="resumoValor" class="valor-total">R$ 0,00</span>
+                    </div>
+                </div>
+                <form id="formPagamento" onsubmit="event.preventDefault(); processarPagamento();">
+                    <div class="form-group">
+                        <label>Forma de Pagamento:</label>
+                        <select id="formaPagamento" required>
+                            <option value="">Selecione...</option>
+                            <option value="Pix">PIX</option>
+                            <option value="Cartao">Cartão</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                    <div id="detalhesPix" class="detalhes-pagamento hidden">
+                        <div class="qrcode-pix">
+                            <div class="qrcode-placeholder" style="text-align:center; padding:20px; background:#333;">📱<br>QR Code Simulado</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="fecharModal('modalPagamento')">Cancelar</button>
+                        <button type="submit" class="btn-primary">Confirmar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditarDados" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Editar Dados</h3><span class="close" onclick="fecharModal('modalEditarDados')">&times;</span></div>
+            <div class="modal-body">
+                <form id="formEditarDados" onsubmit="event.preventDefault(); salvarDados();">
+                    <div class="form-group"><label>Nome:</label><input type="text" required></div>
+                    <div class="form-group"><label>Telefone:</label><input type="tel" required></div>
+                    <div class="form-group"><label>Endereço:</label><input type="text" required></div>
+                    <button class="btn-primary">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovoVeiculoCliente" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Novo Veículo</h3><span class="close" onclick="fecharModal('modalNovoVeiculoCliente')">&times;</span></div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); salvarNovoVeiculoCliente();">
+                    <div class="form-group"><label>Placa:</label><input type="text" id="modalVeiculoPlaca" required></div>
+                    <div class="form-group"><label>Modelo:</label><input type="text" id="modalVeiculoModelo" required></div>
+                    <div class="form-group"><label>Tipo:</label><select id="modalVeiculoTipo"><option value="carro">Carro</option><option value="moto">Moto</option></select></div>
+                    <button class="btn-primary">Cadastrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovoFeedback" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Feedback</h3><span class="close" onclick="fecharModal('modalNovoFeedback')">&times;</span></div>
+            <div class="modal-body"><form onsubmit="event.preventDefault(); enviarFeedback();"><textarea id="mensagemFeedback" required></textarea><button class="btn-primary">Enviar</button></form></div>
+        </div>
+    </div>
+
+    <script src="cliente-script.js"></script>
+</body>
+</html>

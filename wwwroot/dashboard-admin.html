@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Sistema de Estacionamento</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="images/unieuro.png" alt="Logo Unieuro" class="logo-small">
+                    <h1>Sistema de Gerenciamento de Estacionamento</h1>
+                </div>
+                <div class="user-section">
+                    <span>Bem-vindo, Administrador</span>
+                    <a href="index.html" class="btn-logout">Sair</a>
+                </div>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <ul>
+                <li><a href="#dashboard" class="nav-link active" data-target="dashboard">Dashboard</a></li>
+                <li><a href="#usuarios" class="nav-link" data-target="usuarios">Gerenciar Usuários</a></li>
+                <li><a href="#veiculos" class="nav-link" data-target="veiculos">Gerenciar Veículos</a></li>
+                <li><a href="#vagas" class="nav-link" data-target="vagas">Gerenciar Vagas</a></li>
+                <li><a href="#tarifas" class="nav-link" data-target="tarifas">Configurar Tarifas</a></li>
+                <li><a href="#entrada-saida" class="nav-link" data-target="entrada-saida">Entrada/Saída</a></li>
+                <li><a href="#pagamentos" class="nav-link" data-target="pagamentos">Pagamentos</a></li>
+                <li><a href="#ocorrencias" class="nav-link" data-target="ocorrencias">Ocorrências</a></li>
+                <li><a href="#historico" class="nav-link" data-target="historico">Histórico</a></li>
+                <li><a href="#avisos" class="nav-link" data-target="avisos">Avisos</a></li>
+                <li><a href="#feedbacks" class="nav-link" data-target="feedbacks">Feedbacks</a></li>
+            </ul>
+        </nav>
+
+        <main class="admin-main">
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h2>Dashboard Principal</h2>
+                    <p>Visão geral do estacionamento em tempo real</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🚗</div>
+                        <div class="stat-info">
+                            <h3>Vagas Ocupadas</h3>
+                            <span class="stat-number">0</span>
+                            <span class="stat-total">/ Total</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">🆓</div>
+                        <div class="stat-info">
+                            <h3>Vagas Livres</h3>
+                            <span class="stat-number">0</span>
+                            <span class="stat-total">/ Total</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <h3>Faturamento Hoje</h3>
+                            <span class="stat-number">R$ --</span>
+                            <span class="stat-total">do dia</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>Usuários Ativos</h3>
+                            <span class="stat-number">--</span>
+                            <span class="stat-total">cadastrados</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="content-column">
+                        <div class="content-card">
+                            <h3>Vagas em Tempo Real</h3>
+                            <div class="vagas-grid" id="vagasGrid">
+                                <p>Carregando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="usuarios" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Usuários</h2>
+                    <p>Cadastrar e gerenciar funcionários, parceiros e clientes</p>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="abrirModal('modalNovoUsuario')">
+                        + Novo Usuário
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Tipo</th>
+                                <th>Telefone</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaUsuarios">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="veiculos" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Veículos</h2>
+                    <p>Cadastrar e consultar veículos dos usuários</p>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="abrirModal('modalNovoVeiculo')">
+                        + Novo Veículo
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>Modelo</th>
+                                <th>Tipo</th>
+                                <th>Proprietário</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaVeiculos">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="vagas" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Vagas</h2>
+                    <p>Configurar e monitorar vagas do estacionamento</p>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="abrirModal('modalNovaVaga')">
+                        + Nova Vaga
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Vaga</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Veículo</th>
+                                <th>Entrada</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaVagas">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tarifas" class="content-section">
+                <div class="section-header">
+                    <h2>Configurar Tarifas</h2>
+                    <p>Definir valores e descontos para diferentes perfis</p>
+                </div>
+
+                <div class="tarifas-config">
+                    <div class="tarifa-card">
+                        <h3>Tarifa Comum</h3>
+                        <div class="tarifa-form">
+                            <div class="form-group">
+                                <label>Primeira Hora:</label>
+                                <input type="number" id="comumPrimeiraHora" value="10.00" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Hora Adicional:</label>
+                                <input type="number" id="comumHoraAdicional" value="5.00" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Diária (24h):</label>
+                                <input type="number" id="comumDiaria" value="50.00" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tarifa-card">
+                        <h3>Funcionários</h3>
+                        <div class="tarifa-form">
+                            <div class="form-group">
+                                <label>Desconto:</label>
+                                <input type="number" id="descontoFuncionario" value="100.00" step="0.01">
+                                <span>%</span>
+                            </div>
+                            <small>Isenção total (100%)</small>
+                        </div>
+                    </div>
+
+                    <div class="tarifa-card">
+                        <h3>Parceiros</h3>
+                        <div class="tarifa-form">
+                            <div class="form-group">
+                                <label>Desconto:</label>
+                                <input type="number" id="descontoParceiro" value="50.00" step="0.01">
+                                <span>%</span>
+                            </div>
+                            <small>50% de desconto</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="salvarTarifas()">
+                        Salvar Tarifas
+                    </button>
+                </div>
+            </section>
+
+            <section id="entrada-saida" class="content-section">
+                <div class="section-header">
+                    <h2>Controle de Entrada/Saída</h2>
+                    <p>Registrar entrada e saída de veículos</p>
+                </div>
+
+                <div class="entrada-saida-content">
+                    <div class="es-action-card">
+                        <h3>Registrar Entrada</h3>
+                        <div class="es-form">
+                            <div class="form-group">
+                                <label>Placa do Veículo:</label>
+                                <input type="text" id="placaEntrada" placeholder="ABC-1234" style="text-transform:uppercase">
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de Veículo:</label>
+                                <select id="tipoVeiculoEntrada">
+                                    <option value="carro">Carro</option>
+                                    <option value="moto">Moto</option>
+                                    <option value="caminhonete">Caminhonete</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" onclick="registrarEntrada()">
+                                Registrar Entrada
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="es-action-card">
+                        <h3>Registrar Saída</h3>
+                        <div class="es-form">
+                            <div class="form-group">
+                                <label>Placa do Veículo (Consulta):</label>
+                                <input type="text" id="placaSaida" placeholder="ABC-1234" disabled style="background:#333; border:none;">
+                            </div>
+                            <div class="form-group">
+                                <label>Nº Ticket (Obrigatório):</label>
+                                <input type="text" id="ticketSaida" placeholder="ID do ticket">
+                            </div>
+                            <div class="form-group">
+                                <label>Forma de Pagamento:</label>
+                                <select id="formaPagamentoSaida">
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Pix">PIX</option>
+                                    <option value="Cartao">Cartão</option>
+                                </select>
+                            </div>
+                            <button class="btn-warning" onclick="registrarSaida()">
+                                Registrar Saída
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="veiculos-estacionados">
+                    <h3>Veículos Estacionados no Momento</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Placa</th>
+                                    <th>Vaga</th>
+                                    <th>Entrada</th>
+                                    <th>Tempo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaEstacionados">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pagamentos" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Pagamentos</h2>
+                    <p>Consultar e processar pagamentos</p>
+                </div>
+
+                <div class="filtros">
+                    <div class="form-group">
+                        <label>Data Início:</label>
+                        <input type="date" id="dataInicioPagamentos">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Fim:</label>
+                        <input type="date" id="dataFimPagamentos">
+                    </div>
+                    <button class="btn-secondary" onclick="carregarTabelasMovimentacao('pagamentos')">
+                        Atualizar
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Placa</th>
+                                <th>Tipo</th>
+                                <th>Vaga</th>
+                                <th>Tempo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPagamentos">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="ocorrencias" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Ocorrências</h2>
+                    <p>Registrar e consultar ocorrências do estacionamento</p>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="abrirModal('modalNovaOcorrencia')">
+                        + Nova Ocorrência
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Veículo</th>
+                                <th>Descrição</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaOcorrencias">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="historico" class="content-section">
+                <div class="section-header">
+                    <h2>Histórico Completo</h2>
+                    <p>Consultar histórico de entradas, saídas e acessos</p>
+                </div>
+
+                <div class="filtros">
+                    <button class="btn-secondary" onclick="carregarTabelasMovimentacao('todos')">
+                        Atualizar Lista
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Entrada</th>
+                                <th>Placa</th>
+                                <th>Tipo</th>
+                                <th>Vaga</th>
+                                <th>Tempo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaHistorico">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="avisos" class="content-section">
+                <div class="section-header">
+                    <h2>Gerenciar Avisos</h2>
+                    <p>Criar e editar avisos para os usuários</p>
+                </div>
+
+                <div class="content-actions">
+                    <button class="btn-primary" onclick="abrirModal('modalNovoAviso')">
+                        + Novo Aviso
+                    </button>
+                </div>
+
+                <div class="avisos-list" id="listaAvisos">
+                    </div>
+            </section>
+
+            <section id="feedbacks" class="content-section">
+                <div class="section-header">
+                    <h2>Feedbacks dos Clientes</h2>
+                    <p>Consultar mensagens e feedbacks dos usuários</p>
+                </div>
+
+                <div class="feedbacks-list" id="listaFeedbacks">
+                    </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modalNovoUsuario" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Novo Usuário</h3>
+                <span class="close" onclick="fecharModal('modalNovoUsuario')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="formNovoUsuario" onsubmit="event.preventDefault(); salvarNovoUsuario();">
+                    <div class="form-group">
+                        <label>Nome Completo:</label>
+                        <input type="text" id="modalUsuarioNome" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CPF:</label>
+                        <input type="text" id="modalUsuarioCpf" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone:</label>
+                        <input type="tel" id="modalUsuarioTelefone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço:</label>
+                        <input type="text" id="modalUsuarioEndereco" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Usuário:</label>
+                        <select id="modalUsuarioTipo" required>
+                            <option value="cliente">Cliente</option>
+                            <option value="funcionario">Funcionário</option>
+                            <option value="parceiro">Parceiro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha:</label>
+                        <input type="password" id="modalUsuarioSenha" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="fecharModal('modalNovoUsuario')">Cancelar</button>
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovoVeiculo" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Novo Veículo</h3>
+                <span class="close" onclick="fecharModal('modalNovoVeiculo')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Para cadastrar veículo, edite o usuário na aba "Usuários".</p>
+            </div>
+             <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModal('modalNovoVeiculo')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovaVaga" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Nova Vaga</h3>
+                <span class="close" onclick="fecharModal('modalNovaVaga')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); salvarNovaVaga();">
+                    <div class="form-group">
+                        <label>ID da Vaga (Opcional):</label>
+                        <input type="text" id="modalVagaId">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Vaga:</label>
+                        <select id="modalVagaTipo" required>
+                            <option value="carro">Carro</option>
+                            <option value="moto">Moto</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="fecharModal('modalNovaVaga')">Cancelar</button>
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovaOcorrencia" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Registrar Nova Ocorrência</h3>
+                <span class="close" onclick="fecharModal('modalNovaOcorrencia')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); salvarNovaOcorrencia();">
+                    <div class="form-group">
+                        <label>ID do Ticket (Veículo):</label>
+                        <input type="number" id="modalOcorrenciaVeiculo" required placeholder="Número do Ticket">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição:</label>
+                        <textarea id="modalOcorrenciaDescricao" rows="4" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="fecharModal('modalNovaOcorrencia')">Cancelar</button>
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNovoAviso" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Criar Novo Aviso</h3>
+                <span class="close" onclick="fecharModal('modalNovoAviso')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); salvarNovoAviso();">
+                    <div class="form-group">
+                        <label>Título:</label>
+                        <input type="text" id="modalAvisoTitulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição:</label>
+                        <textarea id="modalAvisoDescricao" rows="4" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="fecharModal('modalNovoAviso')">Cancelar</button>
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>
