@@ -22,147 +22,99 @@ namespace EstacionamentoAPI.Services
 
         public async Task<IEnumerable<Tarifa>> GetTarifas()
         {
-            return await _tarifaRepository
-                .GetTarifas();
+            return await _tarifaRepository.GetTarifas();
         }
 
-        public async Task<IActionResult> AtualizarTarifa(
-            int id,
-            Tarifa tarifa)
+        public async Task<IActionResult> AtualizarTarifa(int id, Tarifa tarifa)
         {
             if (id != tarifa.IdTarifa)
             {
-                return new BadRequestObjectResult(
-                    "ID da tarifa não corresponde.");
+                return new BadRequestObjectResult("ID da tarifa não corresponde.");
             }
 
-            var tarifaAtual =
-                await _tarifaRepository.GetById(id);
+            // 1. Busca os dados atuais salvos no banco com o RowVersion para concorrência otimista
+            var tarifaAtual = await _tarifaRepository.GetById(id);
 
             if (tarifaAtual == null)
             {
-                return new NotFoundObjectResult(
-                    "Tarifa não encontrada.");
+                return new NotFoundObjectResult("Tarifa não encontrada.");
             }
 
-            tarifaAtual.ValorPrimeiraHora =
-                tarifa.ValorPrimeiraHora;
+            // 2. Configura a concorrência otimista informando ao EF o RowVersion original da tela do usuário
+            _context.Entry(tarifaAtual).Property(t => t.RowVersion).OriginalValue = tarifa.RowVersion;
 
-            tarifaAtual.ValorHoraAdicional =
-                tarifa.ValorHoraAdicional;
+           // 3. Atualiza os campos de negócio
+           tarifaAtual.ValorPrimeiraHora = tarifa.ValorPrimeiraHora;
+           tarifaAtual.ValorHoraAdicional = tarifa.ValorHoraAdicional;
+           tarifaAtual.ValorDiaria = tarifa.ValorDiaria;
+           tarifaAtual.DescontoFuncionario = tarifa.DescontoFuncionario;
+           tarifaAtual.DescontoParceiro = tarifa.DescontoParceiro;
 
-            tarifaAtual.ValorDiaria =
-                tarifa.ValorDiaria;
-
-            tarifaAtual.DescontoFuncionario =
-                tarifa.DescontoFuncionario;
-
-            tarifaAtual.DescontoParceiro =
-                tarifa.DescontoParceiro;
-
-            try
-            {
-                await _tarifaRepository
-                    .SaveChanges();
+           try
+           {
+              // 4. Salva as alterações aplicando o WHERE com o RowVersion original
+              await _tarifaRepository.SaveChanges();
+              return new NoContentResult();
+           }
+           catch (DbUpdateConcurrencyException)
+           {
+             // 5. Retorna o HTTP 409 (Conflict) indicando que o registro foi modificado por outro processo
+             return new ConflictObjectResult(new
+             { mensagem = 
+             "Outro usuário modificou a tabela de preços enquanto você editava. Por favor, recarregue a página para obter os valores atuais e tente novamente."
+             });
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                return new ConflictObjectResult(
-                    new
-                    {
-                        mensagem =
-                        "Conflito de concorrência ao atualizar tarifa."
-                    });
-            }
-
-            return new NoContentResult();
         }
 
-        public async Task<(decimal valorFinal,
-            string tipoAplicado)>
-            CalcularTarifaAsync(
-                string placa,
-                TimeSpan permanencia)
-       {
-            double totalHoras =
-                Math.Ceiling(permanencia.TotalHours);
-  
-            var tarifa =
-                await _context.Tarifas
-                    .FirstOrDefaultAsync()
-                ?? new Tarifa();
+        public async Task<(decimal valorFinal, string tipoAplicado)> CalcularTarifaAsync(string placa, TimeSpan permanencia)
+        {
+            double totalHoras = Math.Ceiling(permanencia.TotalHours);
+
+            // Mantido AsNoTracking para que o cálculo da saída (pessimista) sempre leia o dado real
+            var tarifa = await _context.Tarifas
+                .AsNoTracking()
+                .FirstOrDefaultAsync() ?? new Tarifa();
 
             decimal valorFinal = 0;
 
-           // cálculo base
-           if (totalHoras <= 1)
-           {
-               valorFinal =
-                   tarifa.ValorPrimeiraHora;
-           }
-           else
-           {
-               valorFinal =
-                   tarifa.ValorPrimeiraHora +
-                   ((decimal)(totalHoras - 1)
-                   * tarifa.ValorHoraAdicional);
-           }
+            if (totalHoras <= 1)
+            {
+                valorFinal = tarifa.ValorPrimeiraHora;
+            }
+            else
+            {
+                valorFinal = tarifa.ValorPrimeiraHora + ((decimal)(totalHoras - 1) * tarifa.ValorHoraAdicional);
+            }
 
-           // aplica diária
-           if (valorFinal >
-               tarifa.ValorDiaria)
-           {
-               valorFinal =
-                   tarifa.ValorDiaria;
-           }
+            if (valorFinal > tarifa.ValorDiaria)
+            {
+                valorFinal = tarifa.ValorDiaria;
+            }
 
-          // busca veículo + usuário
-          var veiculo =
-              await _context.Veiculos
-                  .Include(v => v.Usuario)
-                  .FirstOrDefaultAsync(
-                      v => v.Placa == placa);
+            var veiculo = await _context.Veiculos
+                .Include(v => v.Usuario)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(v => v.Placa == placa);
 
-          string tipoAplicado =
-              "Visitante (Sem desconto)";
+            string tipoAplicado = "Visitante (Sem desconto)";
 
-          if (veiculo?.Usuario != null)
-          {
-              if (veiculo.Usuario.TipoUsuario
-                  == "Funcionario")
-              {
-                  decimal desconto =
-                      valorFinal *
-                     (tarifa
-                     .DescontoFuncionario
-                     / 100);
+            if (veiculo?.Usuario != null)
+            {
+                if (veiculo.Usuario.TipoUsuario == "Funcionario")
+                {
+                    decimal desconto = valorFinal * (tarifa.DescontoFuncionario / 100);
+                    valorFinal -= desconto;
+                    tipoAplicado = "Funcionario";
+                }
+                else if (veiculo.Usuario.TipoUsuario == "Parceiro")
+                {
+                    decimal desconto = valorFinal * (tarifa.DescontoParceiro / 100);
+                    valorFinal -= desconto;
+                    tipoAplicado = "Parceiro";
+                }
+            }
 
-                  valorFinal -= desconto;
-
-                  tipoAplicado =
-                      "Funcionario";
-              }
-              else if (
-                  veiculo.Usuario.TipoUsuario
-                  == "Parceiro")
-             {
-                  decimal desconto =
-                      valorFinal *
-                     (tarifa
-                     .DescontoParceiro
-                     / 100);
-
-                  valorFinal -= desconto;
-
-                  tipoAplicado =
-                      "Parceiro";
-             }
-          }
-
-          return (
-              valorFinal,
-              tipoAplicado
-          );
+            return (valorFinal, tipoAplicado);
         }
     }
 }

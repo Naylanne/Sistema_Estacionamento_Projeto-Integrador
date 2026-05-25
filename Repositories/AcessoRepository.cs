@@ -5,77 +5,71 @@ using EstacionamentoAPI.Repositories.Interfaces;
 
 namespace EstacionamentoAPI.Repositories
 {
-    public class AcessoRepository
-        : IAcessoRepository
+    public class AcessoRepository : IAcessoRepository
     {
-        private readonly
-            EstacionamentoContext _context;
+        private readonly EstacionamentoContext _context;
 
-        public AcessoRepository(
-            EstacionamentoContext context)
+        public AcessoRepository(EstacionamentoContext context)
         {
             _context = context;
         }
 
-        public async Task<Vaga?>
-            ObterVagaComLock(int idVaga)
+        // Busca a primeira vaga disponível para o tipo de veículo e já aplica o Lock
+        // Impede que duas requisições peguem a mesma vaga simultaneamente.
+        public async Task<Vaga?> ObterPrimeiraVagaDisponivelComLock(string tipoVeiculo)
         {
             return await _context.Vagas
-                .FromSqlRaw(@"
+                .FromSqlInterpolated($@"
                     SELECT *
                     FROM ""Vagas""
-                    WHERE ""IdVaga"" = {0}
-                    FOR UPDATE",
-                    idVaga)
+                    WHERE ""Status"" = 'Disponivel'
+                      AND LOWER(""TipoVaga"") = LOWER({tipoVeiculo})
+                    LIMIT 1
+                    FOR UPDATE")
+                .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<bool>
-            ExisteVeiculoNoPatio(
-                string placa)
+        // Busca o ticket de acesso aplicando Lock para evitar cliques duplos / concorrência na saída.
+        public async Task<AcessoVeiculo?> GetByIdComLock(int idAcesso)
         {
             return await _context.Acessos
-                .AnyAsync(a =>
-                    a.Placa == placa
-                    && a.HoraSaida == null);
+                .FromSqlInterpolated($@"
+                    SELECT *
+                    FROM ""Acessos""
+                    WHERE ""IdAcesso"" = {idAcesso}
+                    FOR UPDATE")
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<bool>
-            ExisteOcupacaoAtivaNaVaga(
-                int idVaga)
-        {
-            return await _context.Acessos
-                .AnyAsync(a =>
-                    a.IdVaga == idVaga
-                    && a.HoraSaida == null);
-        }
-
-        public async Task
-            AdicionarAcesso(
-                AcessoVeiculo acesso)
-        {
-            await _context.Acessos
-                .AddAsync(acesso);
-        }
-       
-        public async Task<AcessoVeiculo?>
-            GetById(
-                int idAcesso)
-        {
-            return await _context.Acessos
-                .FirstOrDefaultAsync(
-                    a => a.IdAcesso
-                    == idAcesso);
-        }
-
-        public async Task<Vaga?>
-            GetVagaById(
-                int idVaga)
+        public async Task<Vaga?> ObterVagaComLock(int idVaga)
         {
             return await _context.Vagas
-                .FirstOrDefaultAsync(
-                    v => v.IdVaga
-                    == idVaga);
+                .FromSqlInterpolated($@"
+                    SELECT *
+                    FROM ""Vagas""
+                    WHERE ""IdVaga"" = {idVaga}
+                    FOR UPDATE")
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> ExisteVeiculoNoPatio(string placa)
+        {
+            return await _context.Acessos
+                .AnyAsync(a => a.Placa == placa && a.HoraSaida == null);
+        }
+
+        public async Task<bool> ExisteOcupacaoAtivaNaVaga(int idVaga)
+        {
+            return await _context.Acessos
+                .AnyAsync(a => a.IdVaga == idVaga && a.HoraSaida == null);
+        }
+
+        public async Task AdicionarAcesso(AcessoVeiculo acesso)
+        {
+            await _context.Acessos.AddAsync(acesso);
         }
 
         public async Task SaveChanges()

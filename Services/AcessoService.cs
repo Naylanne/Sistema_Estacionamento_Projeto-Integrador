@@ -8,155 +8,78 @@ using EstacionamentoAPI.DTOs;
 
 namespace EstacionamentoAPI.Services
 {
-    public class AcessoService
-        : IAcessoService
+    public class AcessoService : IAcessoService
     {
-        private readonly
-            IAcessoRepository
-            _acessoRepository;
-
-        private readonly
-            ITarifaService
-            _tarifaService;
-
-        private readonly
-            EstacionamentoContext
-            _context;
+        private readonly IAcessoRepository _acessoRepository;
+        private readonly ITarifaService _tarifaService;
+        private readonly EstacionamentoContext _context;
 
         public AcessoService(
             IAcessoRepository acessoRepository,
             ITarifaService tarifaService,
             EstacionamentoContext context)
         {
-            _acessoRepository =
-                acessoRepository;
-
-            _tarifaService =
-                tarifaService;
-
+            _acessoRepository = acessoRepository;
+            _tarifaService = tarifaService;
             _context = context;
         }
 
-        public async Task<IActionResult>
-            RegistrarEntrada(
-                DadosEntrada dados)
+        public async Task<IActionResult> RegistrarEntrada(DadosEntrada dados)
         {
-            await using var transaction =
-                await _context.Database
-                    .BeginTransactionAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                bool veiculoNoPatio =
-                    await _acessoRepository
-                        .ExisteVeiculoNoPatio(
-                            dados.Placa);
-
+                // 1. Validar se veículo já está no pátio
+                bool veiculoNoPatio = await _acessoRepository.ExisteVeiculoNoPatio(dados.Placa);
                 if (veiculoNoPatio)
                 {
-                    return new BadRequestObjectResult(
-                        $"O veículo {dados.Placa} já está no estacionamento.");
+                    return new BadRequestObjectResult($"O veículo {dados.Placa} já está no estacionamento.");
                 }
 
-                var vaga =
-                    await _context.Vagas
-                    .FirstOrDefaultAsync(v =>
-                        v.Status == "Disponivel"
-                        &&
-                        v.TipoVaga.ToLower()
-                        ==
-                        dados.TipoVeiculo
-                        .ToLower());
+                // Buscar a vaga disponível já aplicando o lock
+                var vaga = await _acessoRepository.ObterPrimeiraVagaDisponivelComLock(dados.TipoVeiculo);
 
                 if (vaga == null)
                 {
                     return new BadRequestObjectResult($"Não há vagas disponíveis para {dados.TipoVeiculo}");
                 }
 
-                // Lock pessimista
-                vaga =
-                    await _acessoRepository
-                        .ObterVagaComLock(vaga.IdVaga);
+                // Nenhuma outra requisição pegará a mesma vaga
+                vaga.Status = "Ocupada";
 
-                if (vaga == null)
+                var acesso = new AcessoVeiculo
                 {
-                    return new NotFoundObjectResult("Vaga não encontrada.");
-                }
+                    Placa = dados.Placa,
+                    IdVaga = vaga.IdVaga,
+                    HoraEntrada = DateTime.UtcNow,
+                    StatusPagamento = "Pendente"
+                };
 
-                // INTEGRIDADE TEMPORAL
-                bool vagaOcupada =
-                    await _acessoRepository
-                        .ExisteOcupacaoAtivaNaVaga(vaga.IdVaga);
+                await _acessoRepository.AdicionarAcesso(acesso);
+                await _acessoRepository.SaveChanges();
+                await transaction.CommitAsync();
 
-                if (vagaOcupada)
-                {
-                    return new ConflictObjectResult(
-                        new
-                        {
-                            mensagem =
-                            "A vaga já possui ocupação ativa."
-                        });
-                }
-
-                vaga.Status =
-                    "Ocupada";
-
-                var acesso =
-                    new AcessoVeiculo
-                    {
-                        Placa =
-                            dados.Placa,
-
-                        IdVaga =
-                            vaga.IdVaga,
-
-                        HoraEntrada =
-                            DateTime.UtcNow,
-
-                        StatusPagamento =
-                            "Pendente"
-                    };
-
-                await _acessoRepository
-                    .AdicionarAcesso(
-                        acesso);
-
-                await _acessoRepository
-                    .SaveChanges();
-
-                await transaction
-                    .CommitAsync();
-
-                return new OkObjectResult(
-                    acesso);
+                return new OkObjectResult(acesso);
             }
-            catch
+            catch (Exception ex)
             {
-                await transaction
-                    .RollbackAsync();
-
-                return new ConflictObjectResult(
-                    new
-                    {
-                        mensagem = "Erro de concorrência na entrada."
-                    });
+                await transaction.RollbackAsync();
+                return new ObjectResult(new { mensagem = "Erro ao registrar entrada.", detalhe = ex.Message }) 
+                { 
+                    StatusCode = 500 
+                };
             }
         }
 
-        public async Task<IActionResult>
-            RegistrarSaida(
-                int idAcesso,
-                DadosSaida dados)
-       {
-            await using var transaction =
-                await _context.Database
-                .BeginTransactionAsync();
+        public async Task<IActionResult> RegistrarSaida(int idAcesso, DadosSaida dados)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var acesso =
-                    await _acessoRepository
-                    .GetById(idAcesso);
+                // Busca o ticket de acesso aplicando lock pessimista
+                var acesso = await _acessoRepository.GetByIdComLock(idAcesso);
 
                 if (acesso == null)
                 {
@@ -170,74 +93,47 @@ namespace EstacionamentoAPI.Services
 
                 acesso.HoraSaida = DateTime.UtcNow;
 
-               // cálculo permanência
-               TimeSpan permanencia = acesso.HoraSaida.Value - acesso.HoraEntrada;
+                // Cálculo permanência
+                TimeSpan permanencia = acesso.HoraSaida.Value - acesso.HoraEntrada;
 
-               // chama TarifaService
-               var resultadoTarifa =
-                await _tarifaService
-                .CalcularTarifaAsync(acesso.Placa, permanencia);
+                // Chama TarifaService
+                var resultadoTarifa = await _tarifaService.CalcularTarifaAsync(acesso.Placa, permanencia);
+                decimal valorFinal = resultadoTarifa.valorFinal;
+                string tipoAplicado = resultadoTarifa.tipoAplicado;
 
-               decimal valorFinal = resultadoTarifa.valorFinal;
+                // Atualização pagamento
+                acesso.ValorPago = valorFinal;
+                acesso.StatusPagamento = "Concluido";
+                acesso.FormaPagamento = dados.FormaPagamento;
 
-               string tipoAplicado = resultadoTarifa.tipoAplicado;
-
-               // atualização pagamento
-               acesso.ValorPago = valorFinal;
-
-               acesso.StatusPagamento = "Concluido";
-
-               acesso.FormaPagamento = dados.FormaPagamento;
-
-               // busca vaga
-               var vaga =
-                await _acessoRepository
-                .GetVagaById(acesso.IdVaga);
-
-               if (vaga != null)
-               {
-                vaga.Status = "Disponivel";
-               }
-
-              await _acessoRepository
-                .SaveChanges();
-
-              await transaction
-                .CommitAsync();
-
-              return new OkObjectResult( 
-                new
+                // Busca a vaga associada também aplicando lock para garantir a consistência de estados
+                var vaga = await _acessoRepository.ObterVagaComLock(acesso.IdVaga);
+                if (vaga != null)
                 {
-                   Placa = acesso.Placa,
+                    vaga.Status = "Disponivel";
+                }
 
-                   TempoPermanencia = permanencia
-                    .ToString(@"hh\:mm"),
+                await _acessoRepository.SaveChanges();
+                await transaction.CommitAsync();
 
-                   ValorFinal = valorFinal,
-
-                   FormaPagamento = acesso.FormaPagamento,
-
-                   TipoTarifa = tipoAplicado,
-
-                Mensagem = "Saída registrada com sucesso"
+                return new OkObjectResult(new
+                {
+                    Placa = acesso.Placa,
+                    TempoPermanencia = permanencia.ToString(@"hh\:mm"),
+                    ValorFinal = valorFinal,
+                    FormaPagamento = acesso.FormaPagamento,
+                    TipoTarifa = tipoAplicado,
+                    Mensagem = "Saída registrada com sucesso"
                 });
             }
             catch (Exception ex)
             {
-            await transaction
-            .RollbackAsync();
-
-            return new ObjectResult(
-            new
-            {
-                mensagem = "Erro ao registrar saída.",
-
-                detalhe = ex.Message
-            })
-           {
-            StatusCode = 500
-           };
-           }
+                await transaction.RollbackAsync();
+                return new ObjectResult(new { mensagem = "Erro ao registrar saída.", detalhe = ex.Message })
+                {
+                    StatusCode = 500
+                };
+            }
         }
     }
 }
