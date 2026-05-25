@@ -8,8 +8,7 @@ namespace EstacionamentoAPI.Services.Interfaces
         Task<IEnumerable<Tarifa>> GetTarifas();
 
         Task<IActionResult> AtualizarTarifa(
-            int id,
-            Tarifa tarifa);
+            int id, Tarifa tarifa);
 
         Task<(decimal valorFinal, string tipoAplicado)>
             CalcularTarifaAsync(string placa, TimeSpan permanencia);

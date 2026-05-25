@@ -47,21 +47,19 @@ namespace EstacionamentoAPI.Services
             if (id != vaga.IdVaga)
                 return new BadRequestObjectResult("ID inconsistente");
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            // Inicia a transação necessária para manter o Lock Pessimista ativo
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Lock pessimista
-                var vagaAtual =
-                    await _vagaRepository.BuscarComLock(id);
+                // Busca o registro aplicando o Lock Pessimista no Banco de Dados
+                var vagaAtual = await _vagaRepository.BuscarComLock(id);
 
                 if (vagaAtual == null)
                     return new NotFoundObjectResult("Vaga não encontrada");
 
-                // Regra de negócio
-                if (vagaAtual.Status == "Ocupada" &&
-                    vaga.Status == "Ocupada")
+                // Regra de negócio validada com o dado mais recente e travado do banco
+                if (vagaAtual.Status == "Ocupada" && vaga.Status == "Ocupada")
                 {
                     return new ConflictObjectResult("Vaga já ocupada");
                 }
@@ -69,51 +67,38 @@ namespace EstacionamentoAPI.Services
                 vagaAtual.TipoVaga = vaga.TipoVaga;
                 vagaAtual.Status = vaga.Status;
 
-                // Concorrência otimista
-                _context.Entry(vagaAtual)
-                    .Property(v => v.RowVersion)
-                    .OriginalValue = vaga.RowVersion;
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync(); // Libera o Lock no banco de dados
 
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    await transaction.RollbackAsync();
-
-                    return new ConflictObjectResult(
-                        "Conflito de concorrência");
-                }
-
-                await transaction.CommitAsync();
                 return new NoContentResult();
             }
-            catch
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw;
+                
+                Console.WriteLine(ex.Message);
+
+                return new ObjectResult("Erro interno ao atualizar a vaga")
+                {
+                    StatusCode = 500
+                };
             }
         }
 
         public async Task<IActionResult> DeletarVaga(int id)
         {
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Lock pessimista
-                var vaga =
-                    await _vagaRepository.BuscarComLock(id);
+                // Busca o registro aplicando o Lock Pessimista para garantir que ninguém altere antes da exclusão
+                var vaga = await _vagaRepository.BuscarComLock(id);
 
                 if (vaga == null)
-                    return new NotFoundObjectResult(
-                        "Vaga não encontrada");
+                    return new NotFoundObjectResult("Vaga não encontrada");
 
                 if (vaga.Status == "Ocupada")
-                    return new BadRequestObjectResult(
-                        "Vaga ocupada");
+                    return new BadRequestObjectResult("Vaga ocupada não pode ser deletada");
 
                 _vagaRepository.Remove(vaga);
 
@@ -122,22 +107,13 @@ namespace EstacionamentoAPI.Services
 
                 return new NoContentResult();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync();
-
-                return new ConflictObjectResult(
-                    "Conflito de concorrência ao excluir a vaga");
-            }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
 
-                // Registrar erro (temporário)
                 Console.WriteLine(ex.Message);
 
-                return new ObjectResult(
-                    "Erro interno no servidor")
+                return new ObjectResult("Erro interno ao excluir a vaga")
                 {
                     StatusCode = 500
                 };

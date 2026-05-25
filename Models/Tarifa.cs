@@ -12,5 +12,6 @@ namespace EstacionamentoAPI.Models
         public decimal ValorDiaria { get; set; }
         public decimal DescontoParceiro { get; set; }
         public decimal DescontoFuncionario { get; set; }
+        public uint RowVersion { get; set; }
     }
 }

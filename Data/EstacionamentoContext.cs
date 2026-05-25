@@ -13,7 +13,7 @@ namespace EstacionamentoAPI.Data
         public DbSet<Tarifa> Tarifas { get; set; }
         public DbSet<AcessoVeiculo> Acessos { get; set; }
         
-        // --- ADICIONADO AGORA ---
+        // --- ADICIONADO RECENTEMENTE ---
         public DbSet<Ocorrencia> Ocorrencias { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Aviso> Avisos { get; set; }
@@ -21,11 +21,38 @@ namespace EstacionamentoAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Seed inicial para testes
+
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.ToTable("usuario");
+
+                entity.HasKey(u => u.IdUsuario);
+
+                // UNIQUE CPF
+                entity.HasIndex(u => u.Cpf)
+                      .IsUnique();
+
+                // CHECK CPF = exatamente 11 números
+                entity.ToTable(t =>
+                    t.HasCheckConstraint(
+                        "CK_Usuario_Cpf",
+                        "cpf ~ '^[0-9]{11}$'"
+                    ));
+
+                // CHECK data nascimento <= data atual
+                entity.ToTable(t =>
+                    t.HasCheckConstraint(
+                        "CK_Usuario_DataNascimento",
+                        "data_nascimento <= CURRENT_DATE"
+                    ));
+            });
+           
             modelBuilder.Entity<Tarifa>().HasData(new Tarifa 
             { 
                 IdTarifa = 1, 
-                TipoTarifa = "Comum", 
+                TipoTarifa = "Padrao", 
                 ValorPrimeiraHora = 10.00m, 
                 ValorHoraAdicional = 5.00m, 
                 ValorDiaria = 50.00m,

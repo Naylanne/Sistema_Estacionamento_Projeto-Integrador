@@ -9,7 +9,6 @@ namespace EstacionamentoAPI.Models
         public string TipoVaga { get; set; } = "Carro"; // Carro, Moto
         public string Status { get; set; } = "Disponivel"; // Disponivel, Ocupada
 
-        [Timestamp]
-        public byte[]? RowVersion { get; set; }
+        public uint RowVersion { get; set; }
     }
 }

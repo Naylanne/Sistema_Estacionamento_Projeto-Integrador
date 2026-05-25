@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using EstacionamentoAPI.Data;
 using EstacionamentoAPI.Models;
 
 namespace EstacionamentoAPI.Repositories.Interfaces

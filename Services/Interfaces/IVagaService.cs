@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using EstacionamentoAPI.Data;
 using EstacionamentoAPI.Models;
 
 namespace EstacionamentoAPI.Services.Interfaces
