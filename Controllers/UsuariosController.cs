@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EstacionamentoAPI.Data;
 using EstacionamentoAPI.Models;
+using BCrypt.Net;
 
 namespace EstacionamentoAPI.Controllers
 {
@@ -93,7 +94,6 @@ namespace EstacionamentoAPI.Controllers
             usuarioBanco.Nome = usuarioAtualizado.Nome;
             usuarioBanco.DataNascimento = usuarioAtualizado.DataNascimento;
             usuarioBanco.Cargo = usuarioAtualizado.Cargo;
-            usuarioBanco.PlacaCarro = usuarioAtualizado.PlacaCarro;
             usuarioBanco.Telefone = usuarioAtualizado.Telefone;
             usuarioBanco.Endereco = usuarioAtualizado.Endereco;
 

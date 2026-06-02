@@ -4,22 +4,31 @@ using System.Text.Json.Serialization;
 
 namespace EstacionamentoAPI.Models
 {
-    public class Ocorrencia
+    public class Pagamento
     {
         [Key]
-        public int IdOcorrencia { get; set; }
+        public int IdPagamento { get; set; }
 
+        // FK única para acesso
         public int IdAcesso { get; set; }
 
         [Required]
         [Column(TypeName = "timestamp")]
         public DateTime DataHora { get; set; }
 
+        [Column(TypeName = "numeric(10,2)")]
+        public decimal ValorPago { get; set; }
+
         [Required]
-        public string Descricao { get; set; } = string.Empty;
+        public string FormaPagamento { get; set; } = "Dinheiro";
+
+        [Required]
+        public string StatusPagamento { get; set; } = "Pendente";
 
         [JsonIgnore]
         public AcessoVeiculo? AcessoVeiculo { get; set; }
 
+        [Timestamp]
+        public uint RowVersion { get; set; }
     }
 }

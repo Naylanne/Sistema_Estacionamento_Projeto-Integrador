@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace EstacionamentoAPI.Models
 {
@@ -6,12 +8,36 @@ namespace EstacionamentoAPI.Models
     {
         [Key]
         public int IdAcesso { get; set; }
+
+        // FK Tarifa
+        public int IdTarifa { get; set; }
+
+        [JsonIgnore]
+        public Tarifa? Tarifa { get; set; }
+
+        // FK Vaga
         public int IdVaga { get; set; }
-        public string Placa { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public Vaga? Vaga { get; set; }
+
+        // FK Veículo
+        public int IdVeiculo { get; set; }
+
+        [JsonIgnore]
+        public Veiculo? Veiculo { get; set; }
+
+        [Required]
+        [Column(TypeName = "timestamp")]
         public DateTime HoraEntrada { get; set; }
+
+        [Column(TypeName = "timestamp")]
         public DateTime? HoraSaida { get; set; }
-        public decimal ValorPago { get; set; }
-        public string StatusPagamento { get; set; } = "Pendente";
-        public string FormaPagamento { get; set; } = "Dinheiro"; 
+
+        public TimeSpan? TempoPermanencia { get; set; }
+
+        // Relação 1:1 com pagamento
+        [JsonIgnore]
+        public Pagamento? Pagamento { get; set; }
     }
 }

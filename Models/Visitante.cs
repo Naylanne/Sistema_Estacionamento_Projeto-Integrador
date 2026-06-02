@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace EstacionamentoAPI.Models
 {
-    public class Veiculo
+    public class Visitante
     {
         [Key]
-        public int IdVeiculo { get; set; }
+        public int IdTicket { get; set; }
 
         [Required]
         [StringLength(7, MinimumLength = 7)]
@@ -17,15 +16,11 @@ namespace EstacionamentoAPI.Models
         public string Placa { get; set; } = string.Empty;
 
         [Required]
-        public string Modelo { get; set; } = string.Empty;
+        [Column(TypeName = "timestamp")]
+        public DateTime HorarioEntrada { get; set; }
 
-        [Required]
-        public string TipoVeiculo { get; set; } = "Carro"; // Carro, Moto
-
-        // Chave Estrangeira para o Dono
-        public int IdUsuario { get; set; }
-       
-        [JsonIgnore] // Evita ciclo infinito no JSON
-        public Usuario? Usuario { get; set; }
+        [Column(TypeName = "timestamp")]
+        public DateTime? HorarioSaida { get; set; }
+  
     }
 }

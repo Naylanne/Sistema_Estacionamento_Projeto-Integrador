@@ -14,9 +14,7 @@ namespace EstacionamentoAPI.Services
         private readonly ITarifaService _tarifaService;
         private readonly EstacionamentoContext _context;
 
-        public AcessoService(
-            IAcessoRepository acessoRepository,
-            ITarifaService tarifaService,
+        public AcessoService(IAcessoRepository acessoRepository, ITarifaService tarifaService,
             EstacionamentoContext context)
         {
             _acessoRepository = acessoRepository;
@@ -26,110 +24,213 @@ namespace EstacionamentoAPI.Services
 
         public async Task<IActionResult> RegistrarEntrada(DadosEntrada dados)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // 1. Validar se veículo já está no pátio
-                bool veiculoNoPatio = await _acessoRepository.ExisteVeiculoNoPatio(dados.Placa);
-                if (veiculoNoPatio)
+                // 1. Buscar veículo
+                var veiculo = await _context.Veiculos
+                    .FirstOrDefaultAsync(v =>
+                        v.Placa == dados.Placa);
+
+                if (veiculo == null)
                 {
-                    return new BadRequestObjectResult($"O veículo {dados.Placa} já está no estacionamento.");
+                    return new NotFoundObjectResult(
+                        "Veículo não encontrado.");
                 }
 
-                // Buscar a vaga disponível já aplicando o lock
-                var vaga = await _acessoRepository.ObterPrimeiraVagaDisponivelComLock(dados.TipoVeiculo);
+                // 2. Verificar se já está no pátio
+                bool veiculoNoPatio =
+                    await _acessoRepository
+                        .ExisteVeiculoNoPatio(dados.Placa);
+
+                if (veiculoNoPatio)
+                {
+                    return new BadRequestObjectResult(
+                        $"O veículo {dados.Placa} Veículo já está no estacionamento.");
+                }
+
+                // 3. Buscar vaga disponível com Lock Pessimista para evitar condições de corrida
+                var vaga =
+                    await _acessoRepository
+                        .ObterPrimeiraVagaDisponivelComLock(
+                            veiculo.TipoVeiculo);
 
                 if (vaga == null)
                 {
-                    return new BadRequestObjectResult($"Não há vagas disponíveis para {dados.TipoVeiculo}");
+                    return new BadRequestObjectResult(
+                        $"Não há vagas disponíveis para {veiculo.TipoVeiculo}");
                 }
 
-                // Nenhuma outra requisição pegará a mesma vaga
+                // 4. Marcar vaga como ocupada
                 vaga.Status = "Ocupada";
 
+                // Tarifa padrão (por enquanto)
+                int idTarifa = 1;
+
+                // 5. Criar acesso
                 var acesso = new AcessoVeiculo
                 {
-                    Placa = dados.Placa,
+                    IdVeiculo = veiculo.IdVeiculo,
                     IdVaga = vaga.IdVaga,
-                    HoraEntrada = DateTime.UtcNow,
-                    StatusPagamento = "Pendente"
+                    IdTarifa = idTarifa,
+                    HoraEntrada = DateTime.UtcNow
                 };
 
-                await _acessoRepository.AdicionarAcesso(acesso);
-                await _acessoRepository.SaveChanges();
-                await transaction.CommitAsync();
-
-                return new OkObjectResult(acesso);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return new ObjectResult(new { mensagem = "Erro ao registrar entrada.", detalhe = ex.Message }) 
-                { 
-                    StatusCode = 500 
-                };
-            }
-        }
-
-        public async Task<IActionResult> RegistrarSaida(int idAcesso, DadosSaida dados)
-        {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                // Busca o ticket de acesso aplicando lock pessimista
-                var acesso = await _acessoRepository.GetByIdComLock(idAcesso);
-
-                if (acesso == null)
-                {
-                    return new NotFoundObjectResult("Ticket não encontrado.");
-                }
-
-                if (acesso.HoraSaida != null)
-                {
-                    return new BadRequestObjectResult("Saída já registrada.");
-                }
-
-                acesso.HoraSaida = DateTime.UtcNow;
-
-                // Cálculo permanência
-                TimeSpan permanencia = acesso.HoraSaida.Value - acesso.HoraEntrada;
-
-                // Chama TarifaService
-                var resultadoTarifa = await _tarifaService.CalcularTarifaAsync(acesso.Placa, permanencia);
-                decimal valorFinal = resultadoTarifa.valorFinal;
-                string tipoAplicado = resultadoTarifa.tipoAplicado;
-
-                // Atualização pagamento
-                acesso.ValorPago = valorFinal;
-                acesso.StatusPagamento = "Concluido";
-                acesso.FormaPagamento = dados.FormaPagamento;
-
-                // Busca a vaga associada também aplicando lock para garantir a consistência de estados
-                var vaga = await _acessoRepository.ObterVagaComLock(acesso.IdVaga);
-                if (vaga != null)
-                {
-                    vaga.Status = "Disponivel";
-                }
+                await _acessoRepository
+                    .AdicionarAcesso(acesso);
 
                 await _acessoRepository.SaveChanges();
+
                 await transaction.CommitAsync();
 
                 return new OkObjectResult(new
                 {
-                    Placa = acesso.Placa,
-                    TempoPermanencia = permanencia.ToString(@"hh\:mm"),
+                    acesso.IdAcesso,
+                    veiculo.Placa,
+                    vaga.IdVaga,
+                    acesso.HoraEntrada,
+                    Mensagem = "Entrada registrada com sucesso"
+});
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return new ObjectResult(new
+                {
+                    mensagem = "Erro ao registrar entrada.",
+                    detalhe = ex.Message
+                })
+                {
+                    StatusCode = 500
+                };
+            }
+        }
+
+        public async Task<IActionResult> RegistrarSaida(
+            int idAcesso,
+            DadosSaida dados)
+        {
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Buscar acesso com Lock
+                var acesso =
+                    await _acessoRepository
+                        .GetByIdComLock(idAcesso);
+
+                if (acesso == null)
+                {
+                    return new NotFoundObjectResult(
+                        "Ticket não encontrado.");
+                }
+
+                // 2. Verificar saída já registrada
+                if (acesso.HoraSaida != null)
+                {
+                    return new BadRequestObjectResult(
+                        "Saída já registrada.");
+                }
+
+                acesso.HoraSaida =
+                    DateTime.UtcNow;
+
+                // 3. Calcular permanência
+                TimeSpan permanencia =
+                    acesso.HoraSaida.Value
+                    - acesso.HoraEntrada;
+
+                acesso.TempoPermanencia =
+                    permanencia;
+
+                // 4. Buscar veículo
+                var veiculo =
+                    await _context.Veiculos
+                        .FirstOrDefaultAsync(v =>
+                            v.IdVeiculo ==
+                            acesso.IdVeiculo);
+
+                if (veiculo == null)
+                {
+                    return new NotFoundObjectResult("Veículo não encontrado.");
+                }
+
+                // 5. Calcular tarifa
+                var resultadoTarifa =
+                    await _tarifaService
+                        .CalcularTarifaAsync(
+                            veiculo.Placa,
+                            permanencia);
+
+                decimal valorFinal =
+                    resultadoTarifa.valorFinal;
+
+                string tipoAplicado =
+                    resultadoTarifa.tipoAplicado;
+
+                // 6. Criar pagamento (1:1)
+                var pagamento = new Pagamento
+                {
+                    IdAcesso = acesso.IdAcesso,
+                    DataHora = DateTime.UtcNow,
+                    ValorPago = valorFinal,
+                    FormaPagamento =
+                        dados.FormaPagamento,
+                    StatusPagamento =
+                        "Concluido"
+                };
+
+                _context.Pagamentos.Add(
+                    pagamento);
+
+                // 7. Liberar vaga com Lock
+                var vaga =
+                    await _acessoRepository
+                        .ObterVagaComLock(
+                            acesso.IdVaga);
+
+                if (vaga != null)
+                {
+                    vaga.Status =
+                        "Disponivel";
+                }
+
+                await _acessoRepository
+                    .SaveChanges();
+
+                await transaction.CommitAsync();
+
+                return new OkObjectResult(new
+                {
+                    veiculo.Placa,
+                    TempoPermanencia =
+                        permanencia.ToString(
+                            @"hh\:mm"),
+
                     ValorFinal = valorFinal,
-                    FormaPagamento = acesso.FormaPagamento,
-                    TipoTarifa = tipoAplicado,
+
+                    FormaPagamento =
+                        dados.FormaPagamento,
+
+                    TipoTarifa =
+                        tipoAplicado,
+
                     Mensagem = "Saída registrada com sucesso"
                 });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return new ObjectResult(new { mensagem = "Erro ao registrar saída.", detalhe = ex.Message })
+
+                return new ObjectResult(new
+                {
+                    mensagem ="Erro ao registrar saída.",
+                    detalhe = ex.Message
+                })
                 {
                     StatusCode = 500
                 };

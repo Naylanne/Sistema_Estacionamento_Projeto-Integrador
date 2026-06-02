@@ -58,7 +58,11 @@ namespace EstacionamentoAPI.Repositories
         public async Task<bool> ExisteVeiculoNoPatio(string placa)
         {
             return await _context.Acessos
-                .AnyAsync(a => a.Placa == placa && a.HoraSaida == null);
+                .Include(a => a.Veiculo)
+                .AnyAsync(a =>  
+                     a.Veiculo != null &&
+                     a.Veiculo.Placa == placa &&
+                     a.HoraSaida == null);
         }
 
         public async Task<bool> ExisteOcupacaoAtivaNaVaga(int idVaga)

@@ -18,7 +18,8 @@ builder.Services.AddSwaggerGen();
 // Pega a string de conexão do appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<EstacionamentoContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString)
+           .UseSnakeCaseNamingConvention());
 
 // 2. Configuração de CORS (Permite que o Frontend acesse a API sem bloqueios)
 builder.Services.AddScoped<IAcessoRepository, AcessoRepository>();
