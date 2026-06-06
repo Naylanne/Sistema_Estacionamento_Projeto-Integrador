@@ -19,7 +19,7 @@ namespace EstacionamentoAPI.Models
         public string Descricao { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public AcessoVeiculo? AcessoVeiculo { get; set; }
+        public Acesso? Acesso { get; set; }
 
     }
 }

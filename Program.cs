@@ -24,8 +24,12 @@ builder.Services.AddDbContext<EstacionamentoContext>(options =>
 // 2. Configuração de CORS (Permite que o Frontend acesse a API sem bloqueios)
 builder.Services.AddScoped<IAcessoRepository, AcessoRepository>();
 builder.Services.AddScoped<IAcessoService, AcessoService>();
+builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<ITarifaRepository, TarifaRepository>();
 builder.Services.AddScoped<ITarifaService, TarifaService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IVagaRepository, VagaRepository>();
 builder.Services.AddScoped<IVagaService, VagaService>();
 

@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using EstacionamentoAPI.Data;
 using EstacionamentoAPI.Models;
-using BCrypt.Net;
+using EstacionamentoAPI.Services.Interfaces;
+using EstacionamentoAPI.DTOs;
 
 namespace EstacionamentoAPI.Controllers
 {
@@ -10,140 +9,73 @@ namespace EstacionamentoAPI.Controllers
     [ApiController]
     public class UsuariosController : ControllerBase
     {
-        private readonly EstacionamentoContext _context;
+        private readonly IUsuarioService _usuarioService;
 
-        public UsuariosController(EstacionamentoContext context)
+        public UsuariosController(IUsuarioService usuarioService)
         {
-            _context = context;
+            _usuarioService = usuarioService;
         }
 
         // GET: api/Usuarios
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            return await _context.Usuarios.ToListAsync();
+            var usuarios = await _usuarioService.GetUsuarios();
+            return Ok(usuarios);
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Usuario>> GetUsuario(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
+            var usuario = await _usuarioService.GetUsuario(id);
             if (usuario == null)
             {
                 return NotFound("Usuário não encontrado.");
             }
-
-            return usuario;
+            return Ok(usuario);
         }
 
         // POST: api/Usuarios
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO login)
+        {
+            var resultado = await _usuarioService.Login(login);
+            return resultado;
+        }
+
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        public async Task<IActionResult> PostUsuario(Usuario usuario)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            // Verifica CPF duplicado
-            bool cpfExiste = await _context.Usuarios.AnyAsync(u => u.Cpf == usuario.Cpf);
-            if (cpfExiste)
+            var resultado = await _usuarioService.RegistrarUsuario(usuario);
+            
+            if (resultado is OkObjectResult okResult && okResult.Value is Usuario usuarioCriado)
             {
-                return BadRequest("Já existe um usuário cadastrado com este CPF.");
+                return CreatedAtAction(nameof(GetUsuario), new { id = usuarioCriado.IdUsuario }, usuarioCriado);
             }
 
-            // Gera hash da senha
-            usuario.SenhaAcesso = BCrypt.Net.BCrypt.HashPassword(usuario.SenhaAcesso);
-                        
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.IdUsuario }, usuario);
+            return resultado;
         }
 
         // PUT: api/Usuarios/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUsuario(int id, Usuario usuarioAtualizado)
         {
-            if (id != usuarioAtualizado.IdUsuario)
-            {
-                return BadRequest("ID do usuário não confere.");
-            }
-
-            var usuarioBanco = await _context.Usuarios.FindAsync(id);
-            if (usuarioBanco == null)
-            {
-                return NotFound("Usuário não encontrado.");
-            }
-
-            // Concorrência Otimista
-            _context.Entry(usuarioBanco).Property(u => u.RowVersion).OriginalValue = usuarioAtualizado.RowVersion;
-
-            // Verifica CPF duplicado
-            bool cpfExiste = await _context.Usuarios.AnyAsync(u => u.Cpf == usuarioAtualizado.Cpf && u.IdUsuario != id);
-            if (cpfExiste)
-            {
-                return BadRequest("Já existe outro usuário cadastrado com este CPF.");
-            }
-
-            // Atualiza campos
-            usuarioBanco.TipoUsuario = usuarioAtualizado.TipoUsuario;
-            usuarioBanco.Cpf = usuarioAtualizado.Cpf;
-            usuarioBanco.Nome = usuarioAtualizado.Nome;
-            usuarioBanco.DataNascimento = usuarioAtualizado.DataNascimento;
-            usuarioBanco.Cargo = usuarioAtualizado.Cargo;
-            usuarioBanco.Telefone = usuarioAtualizado.Telefone;
-            usuarioBanco.Endereco = usuarioAtualizado.Endereco;
-
-            // Atualiza senha apenas se enviada
-            if (!string.IsNullOrWhiteSpace(usuarioAtualizado.SenhaAcesso))
-            {
-                usuarioBanco.SenhaAcesso = BCrypt.Net.BCrypt.HashPassword(usuarioAtualizado.SenhaAcesso);
-            }
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound("Usuário não encontrado.");
-                }
-
-                // Retorna HTTP 409 (Conflict) indicando que o registro foi modificado por outro processo
-                return Conflict(new
-                {
-                    mensagem = 
-                    "Este cadastro de usuário foi alterado por outro funcionário enquanto você o editava. Por favor, recarregue os dados e tente novamente."
-                });
-            }
-
-            return NoContent();
+            var resultado = await _usuarioService.AtualizarUsuario(id, usuarioAtualizado);
+            return resultado;
         }
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound("Usuário não encontrado.");
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UsuarioExists(int id)
-        {
-            return _context.Usuarios.Any(e => e.IdUsuario == id);
+            var resultado = await _usuarioService.ExcluirUsuario(id);
+            return resultado;
         }
     }
 }

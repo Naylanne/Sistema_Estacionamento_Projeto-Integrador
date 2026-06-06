@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EstacionamentoAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class ReestruturacaoBanco : Migration
+    public partial class UpdateDevelopment : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -88,21 +88,6 @@ namespace EstacionamentoAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "visitante",
-                columns: table => new
-                {
-                    id_ticket = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    placa = table.Column<string>(type: "char(7)", maxLength: 7, nullable: false),
-                    horario_entrada = table.Column<DateTime>(type: "timestamp", nullable: false),
-                    horario_saida = table.Column<DateTime>(type: "timestamp", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_visitante", x => x.id_ticket);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "feedback",
                 columns: table => new
                 {
@@ -152,6 +137,7 @@ namespace EstacionamentoAPI.Migrations
                 {
                     id_acesso = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ticket = table.Column<string>(type: "text", nullable: false),
                     id_tarifa = table.Column<int>(type: "integer", nullable: false),
                     id_vaga = table.Column<int>(type: "integer", nullable: false),
                     id_veiculo = table.Column<int>(type: "integer", nullable: false),
@@ -264,6 +250,12 @@ namespace EstacionamentoAPI.Migrations
                 column: "id_veiculo");
 
             migrationBuilder.CreateIndex(
+                name: "ix_acesso_veiculo_ticket",
+                table: "acesso_veiculo",
+                column: "ticket",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_feedback_id_usuario",
                 table: "feedback",
                 column: "id_usuario");
@@ -311,9 +303,6 @@ namespace EstacionamentoAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "pagamento");
-
-            migrationBuilder.DropTable(
-                name: "visitante");
 
             migrationBuilder.DropTable(
                 name: "acesso_veiculo");

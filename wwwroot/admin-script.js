@@ -56,7 +56,7 @@ async function carregarDashboard() {
         }
 
         // 2. Carrega Movimentação para calcular Faturamento do Dia
-        const resMov = await fetch(`${API_URL}/Movimentacao`);
+        const resMov = await fetch(`${API_URL}/Acessos`);
         const movimentos = await resMov.json();
 
         // Filtra pagamentos feitos HOJE
@@ -209,9 +209,9 @@ async function carregarTarifas() {
         const tarifas = await res.json();
         const t = tarifas.find(x => x.idTarifa === 1);
         if(t) {
-            document.getElementById('comumPrimeiraHora').value = t.valorPrimeiraHora;
-            document.getElementById('comumHoraAdicional').value = t.valorHoraAdicional;
-            document.getElementById('comumDiaria').value = t.valorDiaria;
+            document.getElementById('padraoPrimeiraHora').value = t.valorPrimeiraHora;
+            document.getElementById('padraoHoraAdicional').value = t.valorHoraAdicional;
+            document.getElementById('padraoDiaria').value = t.valorDiaria;
             document.getElementById('descontoFuncionario').value = t.descontoFuncionario;
             document.getElementById('descontoParceiro').value = t.descontoParceiro;
         }
@@ -220,10 +220,10 @@ async function carregarTarifas() {
 
 async function salvarTarifas() {
     const tarifa = {
-        idTarifa: 1, tipoTarifa: "Comum",
-        valorPrimeiraHora: parseFloat(document.getElementById('comumPrimeiraHora').value),
-        valorHoraAdicional: parseFloat(document.getElementById('comumHoraAdicional').value),
-        valorDiaria: parseFloat(document.getElementById('comumDiaria').value),
+        idTarifa: 1, tipoTarifa: "Padrao",
+        valorPrimeiraHora: parseFloat(document.getElementById('padraoPrimeiraHora').value),
+        valorHoraAdicional: parseFloat(document.getElementById('padraoHoraAdicional').value),
+        valorDiaria: parseFloat(document.getElementById('padraoDiaria').value),
         descontoFuncionario: parseFloat(document.getElementById('descontoFuncionario').value),
         descontoParceiro: parseFloat(document.getElementById('descontoParceiro').value)
     };

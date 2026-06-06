@@ -11,19 +11,17 @@ namespace EstacionamentoAPI.Data
         public DbSet<Tarifa> Tarifas { get; set; }
         public DbSet<Veiculo> Veiculos { get; set; }
         public DbSet<Vaga> Vagas { get; set; }
-        public DbSet<AcessoVeiculo> Acessos { get; set; }
+        public DbSet<Acesso> Acessos { get; set; }
         
         // --- ADICIONADO RECENTEMENTE ---
         public DbSet<Ocorrencia> Ocorrencias { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Pagamento> Pagamentos { get; set; }
-        public DbSet<Visitante> Visitantes { get; set; }
         public DbSet<Aviso> Avisos { get; set; }
         // ------------------------
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             base.OnModelCreating(modelBuilder);
 
             // Extensão PostgreSQL
@@ -41,8 +39,12 @@ namespace EstacionamentoAPI.Data
                 entity.HasIndex(u => u.Cpf)
                     .IsUnique();
 
+                // CORREÇÃO: Mapeamento do xmin para PostgreSQL
                 entity.Property(u => u.RowVersion)
-                    .IsRowVersion();
+                      .HasColumnName("xmin")
+                      .HasColumnType("xid")
+                      .ValueGeneratedOnAddOrUpdate()
+                      .IsConcurrencyToken();
 
                 // CPF exatamente 11 números
                 entity.ToTable(t =>
@@ -68,8 +70,12 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(t => t.IdTarifa);
 
+                // CORREÇÃO: Mapeamento do xmin para PostgreSQL
                 entity.Property(t => t.RowVersion)
-                    .IsRowVersion();
+                      .HasColumnName("xmin")
+                      .HasColumnType("xid")
+                      .ValueGeneratedOnAddOrUpdate()
+                      .IsConcurrencyToken();
 
                 entity.HasData(
                     new Tarifa
@@ -125,32 +131,28 @@ namespace EstacionamentoAPI.Data
                 entity.HasKey(v => v.IdVaga);
 
                 entity.HasData(
-                    // Carros
                     new Vaga { IdVaga = 1, TipoVaga = "Carro", Status = "Disponivel" },
                     new Vaga { IdVaga = 2, TipoVaga = "Carro", Status = "Disponivel" },
-
-                    // Motos
                     new Vaga { IdVaga = 3, TipoVaga = "Moto", Status = "Disponivel" },
                     new Vaga { IdVaga = 4, TipoVaga = "Moto", Status = "Disponivel" },
- 
-                    // Caminhonetes
                     new Vaga { IdVaga = 5, TipoVaga = "Caminhonete", Status = "Disponivel" },
                     new Vaga { IdVaga = 6, TipoVaga = "Caminhonete", Status = "Disponivel" },
-
-                    // Caminhões
                     new Vaga { IdVaga = 7, TipoVaga = "Caminhao", Status = "Disponivel" },
                     new Vaga { IdVaga = 8, TipoVaga = "Caminhao", Status = "Disponivel" }
                 );
             });
 
             // ==================================================
-            // ACESSO VEICULO
+            // ACESSO
             // ==================================================
-            modelBuilder.Entity<AcessoVeiculo>(entity =>
+            modelBuilder.Entity<Acesso>(entity =>
             {
                 entity.ToTable("acesso_veiculo");
 
                 entity.HasKey(a => a.IdAcesso);
+
+                entity.HasIndex(a => a.Ticket)
+                    .IsUnique();
 
                 // Hora saída >= entrada
                 entity.ToTable(t =>
@@ -171,12 +173,10 @@ namespace EstacionamentoAPI.Data
                     .WithMany()
                     .HasForeignKey(a => a.IdVeiculo);
 
-                // 1:1 Pagamento
+                // CORREÇÃO: Mantido apenas este relacionamento 1:1 limpo (os outros duplicados foram removidos)
                 entity.HasOne(a => a.Pagamento)
-                    .WithOne(p => p.AcessoVeiculo)
-                    .HasForeignKey<Pagamento>(
-                        p => p.IdAcesso
-                    );
+                    .WithOne(p => p.Acesso)
+                    .HasForeignKey<Pagamento>(p => p.IdAcesso);
             });
 
             // ==================================================
@@ -188,12 +188,15 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(p => p.IdPagamento);
 
+                // CORREÇÃO: Mapeamento do xmin para PostgreSQL
                 entity.Property(p => p.RowVersion)
-                    .IsRowVersion();
+                      .HasColumnName("xmin")
+                      .HasColumnType("xid")
+                      .ValueGeneratedOnAddOrUpdate()
+                      .IsConcurrencyToken();
 
-                // Garante 1:1
                 entity.HasIndex(p => p.IdAcesso)
-                    .IsUnique();
+                      .IsUnique();
             });
 
             // ==================================================
@@ -219,19 +222,9 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(o => o.IdOcorrencia);
 
-                entity.HasOne(o => o.AcessoVeiculo)
+                entity.HasOne(o => o.Acesso)
                     .WithMany()
                     .HasForeignKey(o => o.IdAcesso);
-            });
-
-            // ==================================================
-            // VISITANTE
-            // ==================================================
-            modelBuilder.Entity<Visitante>(entity =>
-            {
-                entity.ToTable("visitante");
-
-                entity.HasKey(v => v.IdTicket);
             });
 
             // ==================================================

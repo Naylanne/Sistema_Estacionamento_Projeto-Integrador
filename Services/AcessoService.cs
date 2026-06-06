@@ -22,7 +22,16 @@ namespace EstacionamentoAPI.Services
             _context = context;
         }
 
-        public async Task<IActionResult> RegistrarEntrada(DadosEntrada dados)
+        public async Task<IEnumerable<Acesso>> GetAcessos()
+        {
+            return await _context.Acessos.ToListAsync();
+        }
+        private string GerarTicket()
+        {
+            return $"TKT-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
+        }
+
+        public async Task<IActionResult> RegistrarEntrada(DadosEntrada DTOs)
         {
             await using var transaction =
                 await _context.Database.BeginTransactionAsync();
@@ -32,7 +41,7 @@ namespace EstacionamentoAPI.Services
                 // 1. Buscar veículo
                 var veiculo = await _context.Veiculos
                     .FirstOrDefaultAsync(v =>
-                        v.Placa == dados.Placa);
+                        v.Placa == DTOs.Placa);
 
                 if (veiculo == null)
                 {
@@ -43,12 +52,12 @@ namespace EstacionamentoAPI.Services
                 // 2. Verificar se já está no pátio
                 bool veiculoNoPatio =
                     await _acessoRepository
-                        .ExisteVeiculoNoPatio(dados.Placa);
+                        .ExisteVeiculoNoPatio(DTOs.Placa);
 
                 if (veiculoNoPatio)
                 {
                     return new BadRequestObjectResult(
-                        $"O veículo {dados.Placa} Veículo já está no estacionamento.");
+                        $"O veículo {DTOs.Placa} Veículo já está no estacionamento.");
                 }
 
                 // 3. Buscar vaga disponível com Lock Pessimista para evitar condições de corrida
@@ -70,8 +79,9 @@ namespace EstacionamentoAPI.Services
                 int idTarifa = 1;
 
                 // 5. Criar acesso
-                var acesso = new AcessoVeiculo
+                var acesso = new Acesso
                 {
+                    Ticket = GerarTicket(),
                     IdVeiculo = veiculo.IdVeiculo,
                     IdVaga = vaga.IdVaga,
                     IdTarifa = idTarifa,
@@ -88,6 +98,7 @@ namespace EstacionamentoAPI.Services
                 return new OkObjectResult(new
                 {
                     acesso.IdAcesso,
+                    acesso.Ticket,
                     veiculo.Placa,
                     vaga.IdVaga,
                     acesso.HoraEntrada,
@@ -109,9 +120,7 @@ namespace EstacionamentoAPI.Services
             }
         }
 
-        public async Task<IActionResult> RegistrarSaida(
-            int idAcesso,
-            DadosSaida dados)
+        public async Task<IActionResult> RegistrarSaida(int idAcesso, DadosSaida DTOs)
         {
             await using var transaction =
                 await _context.Database.BeginTransactionAsync();
@@ -178,10 +187,8 @@ namespace EstacionamentoAPI.Services
                     IdAcesso = acesso.IdAcesso,
                     DataHora = DateTime.UtcNow,
                     ValorPago = valorFinal,
-                    FormaPagamento =
-                        dados.FormaPagamento,
-                    StatusPagamento =
-                        "Concluido"
+                    FormaPagamento = DTOs.FormaPagamento,
+                    StatusPagamento = "Concluido"
                 };
 
                 _context.Pagamentos.Add(
@@ -195,8 +202,7 @@ namespace EstacionamentoAPI.Services
 
                 if (vaga != null)
                 {
-                    vaga.Status =
-                        "Disponivel";
+                    vaga.Status = "Disponivel";
                 }
 
                 await _acessoRepository
@@ -213,11 +219,9 @@ namespace EstacionamentoAPI.Services
 
                     ValorFinal = valorFinal,
 
-                    FormaPagamento =
-                        dados.FormaPagamento,
+                    FormaPagamento = DTOs.FormaPagamento,
 
-                    TipoTarifa =
-                        tipoAplicado,
+                    TipoTarifa = tipoAplicado,
 
                     Mensagem = "Saída registrada com sucesso"
                 });

@@ -4,10 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace EstacionamentoAPI.Models
 {
-    public class AcessoVeiculo
+    public class Acesso
     {
         [Key]
         public int IdAcesso { get; set; }
+
+        [Required]
+        public string Ticket { get; set; } = string.Empty;
 
         // FK Tarifa
         public int IdTarifa { get; set; }

@@ -31,7 +31,7 @@ namespace EstacionamentoAPI.Repositories
         }
 
         // Busca o ticket de acesso aplicando Lock para evitar cliques duplos / concorrência na saída.
-        public async Task<AcessoVeiculo?> GetByIdComLock(int idAcesso)
+        public async Task<Acesso?> GetByIdComLock(int idAcesso)
         {
             return await _context.Acessos
                 .FromSqlInterpolated($@"
@@ -71,7 +71,7 @@ namespace EstacionamentoAPI.Repositories
                 .AnyAsync(a => a.IdVaga == idVaga && a.HoraSaida == null);
         }
 
-        public async Task AdicionarAcesso(AcessoVeiculo acesso)
+        public async Task AdicionarAcesso(Acesso acesso)
         {
             await _context.Acessos.AddAsync(acesso);
         }

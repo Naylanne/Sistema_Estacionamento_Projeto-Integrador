@@ -8,26 +8,24 @@ namespace EstacionamentoAPI.Controllers
     [ApiController]
     public class AcessosController : ControllerBase
     {
-        private readonly
-            IAcessoService _acessoService;
+        private readonly IAcessoService _acessoService;
 
-        public AcessosController(
-            IAcessoService acessoService)
+        public AcessosController(IAcessoService acessoService)
         {
-            _acessoService =
-                acessoService;
+            _acessoService = acessoService;
         }
 
-        // POST: api/Acessos/entrada
-        [HttpPost("entrada")]
-        public async Task<IActionResult>
-            RegistrarEntrada(
-                DadosEntrada dados)
+        [HttpGet]
+        public async Task<IActionResult> GetAcessos()
         {
-            return await
-                _acessoService
-                    .RegistrarEntrada(
-                        dados);
+            var acessos = await _acessoService.GetAcessos();
+            return Ok(acessos);
+        }
+
+        [HttpPost("entrada")]
+        public async Task<IActionResult> RegistrarEntrada(DadosEntrada dados)
+        {
+            return await _acessoService.RegistrarEntrada(dados);
         }
     }
 }

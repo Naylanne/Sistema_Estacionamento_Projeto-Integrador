@@ -26,7 +26,7 @@ namespace EstacionamentoAPI.Models
         public string StatusPagamento { get; set; } = "Pendente";
 
         [JsonIgnore]
-        public AcessoVeiculo? AcessoVeiculo { get; set; }
+        public Acesso? Acesso { get; set; }
 
         [Timestamp]
         public uint RowVersion { get; set; }

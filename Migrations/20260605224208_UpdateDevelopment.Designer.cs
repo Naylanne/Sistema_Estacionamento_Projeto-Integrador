@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EstacionamentoAPI.Migrations
 {
     [DbContext(typeof(EstacionamentoContext))]
-    [Migration("20260602014338_ReestruturacaoBanco")]
-    partial class ReestruturacaoBanco
+    [Migration("20260605224208_UpdateDevelopment")]
+    partial class UpdateDevelopment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,7 +26,7 @@ namespace EstacionamentoAPI.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "btree_gist");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("EstacionamentoAPI.Models.AcessoVeiculo", b =>
+            modelBuilder.Entity("EstacionamentoAPI.Models.Acesso", b =>
                 {
                     b.Property<int>("IdAcesso")
                         .ValueGeneratedOnAdd()
@@ -59,6 +59,11 @@ namespace EstacionamentoAPI.Migrations
                         .HasColumnType("interval")
                         .HasColumnName("tempo_permanencia");
 
+                    b.Property<string>("Ticket")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ticket");
+
                     b.HasKey("IdAcesso")
                         .HasName("pk_acesso_veiculo");
 
@@ -70,6 +75,10 @@ namespace EstacionamentoAPI.Migrations
 
                     b.HasIndex("IdVeiculo")
                         .HasDatabaseName("ix_acesso_veiculo_id_veiculo");
+
+                    b.HasIndex("Ticket")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acesso_veiculo_ticket");
 
                     b.ToTable("acesso_veiculo", null, t =>
                         {
@@ -465,36 +474,7 @@ namespace EstacionamentoAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EstacionamentoAPI.Models.Visitante", b =>
-                {
-                    b.Property<int>("IdTicket")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id_ticket");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdTicket"));
-
-                    b.Property<DateTime>("HorarioEntrada")
-                        .HasColumnType("timestamp")
-                        .HasColumnName("horario_entrada");
-
-                    b.Property<DateTime?>("HorarioSaida")
-                        .HasColumnType("timestamp")
-                        .HasColumnName("horario_saida");
-
-                    b.Property<string>("Placa")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("char(7)")
-                        .HasColumnName("placa");
-
-                    b.HasKey("IdTicket")
-                        .HasName("pk_visitante");
-
-                    b.ToTable("visitante", (string)null);
-                });
-
-            modelBuilder.Entity("EstacionamentoAPI.Models.AcessoVeiculo", b =>
+            modelBuilder.Entity("EstacionamentoAPI.Models.Acesso", b =>
                 {
                     b.HasOne("EstacionamentoAPI.Models.Tarifa", "Tarifa")
                         .WithMany()
@@ -538,26 +518,26 @@ namespace EstacionamentoAPI.Migrations
 
             modelBuilder.Entity("EstacionamentoAPI.Models.Ocorrencia", b =>
                 {
-                    b.HasOne("EstacionamentoAPI.Models.AcessoVeiculo", "AcessoVeiculo")
+                    b.HasOne("EstacionamentoAPI.Models.Acesso", "Acesso")
                         .WithMany()
                         .HasForeignKey("IdAcesso")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ocorrencia_acesso_veiculo_id_acesso");
 
-                    b.Navigation("AcessoVeiculo");
+                    b.Navigation("Acesso");
                 });
 
             modelBuilder.Entity("EstacionamentoAPI.Models.Pagamento", b =>
                 {
-                    b.HasOne("EstacionamentoAPI.Models.AcessoVeiculo", "AcessoVeiculo")
+                    b.HasOne("EstacionamentoAPI.Models.Acesso", "Acesso")
                         .WithOne("Pagamento")
                         .HasForeignKey("EstacionamentoAPI.Models.Pagamento", "IdAcesso")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_pagamento_acesso_veiculo_id_acesso");
 
-                    b.Navigation("AcessoVeiculo");
+                    b.Navigation("Acesso");
                 });
 
             modelBuilder.Entity("EstacionamentoAPI.Models.Veiculo", b =>
@@ -572,7 +552,7 @@ namespace EstacionamentoAPI.Migrations
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("EstacionamentoAPI.Models.AcessoVeiculo", b =>
+            modelBuilder.Entity("EstacionamentoAPI.Models.Acesso", b =>
                 {
                     b.Navigation("Pagamento");
                 });

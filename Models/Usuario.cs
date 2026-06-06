@@ -25,7 +25,6 @@ namespace EstacionamentoAPI.Models
         [Column(TypeName = "date")]
         public DateTime DataNascimento { get; set; }
 
-        [Required]
         public string Cargo { get; set; } = string.Empty; // Atendente, Gerente
 
         [Required]

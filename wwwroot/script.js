@@ -42,12 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.classList.remove('hidden');
     });
 
-
     // --- 2. LÓGICA DE LOGIN ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const cpf = document.getElementById('cpf').value;
+        const cpf = document.getElementById('cpf').value.replace(/\D/g, "");
         const senha = document.getElementById('senha').value;
         const tipoSelecionado = document.getElementById('tipoUsuario').value; // cliente ou admin
 
@@ -62,42 +61,43 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEntrar.disabled = true;
 
         try {
-            // Busca todos os usuários do banco
-            const response = await fetch(`${API_URL}/Usuarios`);
-            if (!response.ok) throw new Error("Erro ao conectar com servidor");
-            
-            const usuarios = await response.json();
+            const response = await fetch(`${API_URL}/Usuarios/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cpf: cpf,
+                    senhaAcesso: senha
+                })
+            });
 
-            // Procura usuário que bate CPF e Senha
-            const usuarioEncontrado = usuarios.find(u => u.cpf === cpf && u.senhaAcesso === senha);
+           if (response.ok) {
+               const usuarioEncontrado = await response.json();
 
-            if (usuarioEncontrado) {
-                // Login Sucesso!
-                // Salva dados no navegador para usar nas outras páginas
-                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioEncontrado));
-                
-                // Verifica se o tipo selecionado bate com a permissão (Simulação básica)
-                // Na vida real, o tipo viria do banco, mas vamos confiar na seleção do HTML por enquanto
-                // ou verificar se usuarioEncontrado.tipoUsuario bate.
-                
-                if (tipoSelecionado === 'admin') {
-                    window.location.href = 'dashboard-admin.html';
-                } else {
-                    window.location.href = 'dashboard-cliente.html';
-                }
+               localStorage.setItem(
+                   'usuarioLogado',
+                   JSON.stringify(usuarioEncontrado)
+               );
+
+               if (tipoSelecionado === 'admin') {
+                  window.location.href = 'dashboard-admin.html';
+               } else {
+                  window.location.href = 'dashboard-cliente.html';
+               }
             } else {
                 alert("CPF ou Senha incorretos!");
             }
-
-        } catch (erro) {
+        }
+        catch (erro) {
             console.error(erro);
             alert("Erro ao tentar fazer login. O servidor está rodando?");
-        } finally {
+        }
+        finally {
             btnEntrar.innerText = textoOriginal;
             btnEntrar.disabled = false;
         }
     });
-
 
     // --- 3. LÓGICA DE CADASTRO ---
     cadastroForm.addEventListener('submit', async (e) => {
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const novoUsuario = {
             nome: document.getElementById('cadNome').value,
-            cpf: document.getElementById('cadCpf').value,
+            cpf: document.getElementById('cadCpf').value.replace(/\D/g, ""),
             // dataNascimento: document.getElementById('cadDataNasc').value, // Backend precisa suportar DateOnly ou string
             telefone: document.getElementById('cadTelefone').value,
             endereco: document.getElementById('cadEndereco').value,
