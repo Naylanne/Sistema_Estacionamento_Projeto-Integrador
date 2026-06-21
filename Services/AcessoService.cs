@@ -5,6 +5,7 @@ using EstacionamentoAPI.Models;
 using EstacionamentoAPI.Repositories.Interfaces;
 using EstacionamentoAPI.Services.Interfaces;
 using EstacionamentoAPI.DTOs;
+using EstacionamentoAPI.Enums;
 
 namespace EstacionamentoAPI.Services
 {
@@ -26,6 +27,21 @@ namespace EstacionamentoAPI.Services
         {
             return await _context.Acessos.ToListAsync();
         }
+
+        public async Task<IEnumerable<Acesso>> GetAcessosAtivos()
+        {
+            return await _context.Acessos
+                .Where(a => a.HoraSaida == null)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Acesso>> GetAcessosFinalizados()
+        {
+            return await _context.Acessos
+               .Where(a => a.HoraSaida != null)
+               .ToListAsync();
+        }
+       
         private string GerarTicket()
         {
             return $"TKT-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
@@ -188,7 +204,7 @@ namespace EstacionamentoAPI.Services
                     DataHora = DateTime.UtcNow,
                     ValorPago = valorFinal,
                     FormaPagamento = DTOs.FormaPagamento,
-                    StatusPagamento = "Concluido"
+                    StatusPagamento = StatusPagamentoEnum.Pago
                 };
 
                 _context.Pagamentos.Add(
@@ -239,6 +255,27 @@ namespace EstacionamentoAPI.Services
                     StatusCode = 500
                 };
             }
+        }
+
+        public async Task<IEnumerable<HistoricoComPagamentoDto>> GetHistoricoComPagamento()
+        {
+        var query = from av in _context.Acessos
+                    join p in _context.Pagamentos
+                      on av.IdAcesso equals p.IdAcesso into pagamentos
+                    from pagamento in pagamentos.DefaultIfEmpty()
+                    select new HistoricoComPagamentoDto
+                    {
+                        IdAcesso = av.IdAcesso,
+                        Ticket = av.Ticket,
+                        HoraEntrada = av.HoraEntrada,
+                        HoraSaida = av.HoraSaida,
+                        TempoPermanencia = av.TempoPermanencia,
+                        ValorPago = pagamento != null ? pagamento.ValorPago : null,
+                        FormaPagamento = pagamento != null ? pagamento.FormaPagamento : null,
+                        StatusPagamento = pagamento != null ? pagamento.StatusPagamento.ToString() : null,
+                        DataPagamento = pagamento != null ? pagamento.DataHora : null
+                    };
+        return await query.ToListAsync();
         }
     }
 }

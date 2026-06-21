@@ -5,6 +5,7 @@ using EstacionamentoAPI.DTOs;
 using EstacionamentoAPI.Models;
 using EstacionamentoAPI.Repositories.Interfaces;
 using EstacionamentoAPI.Services.Interfaces;
+using EstacionamentoAPI.Enums;
 
 namespace EstacionamentoAPI.Services
 {
@@ -44,26 +45,26 @@ namespace EstacionamentoAPI.Services
                 if (acesso == null)
                 {
                     await transacao.RollbackAsync();
-                    return new NotFoundObjectResult("Acesso não encontrado.");
+                    return new NotFoundObjectResult("Acesso não encontrado."); // Retorna 404 (o registro de acesso não existe)
                 }
 
                 var pagamentoExistente = await _pagamentoRepository.GetByIdAcesso(idAcesso);
                 if (pagamentoExistente != null)
                 {
                     await transacao.RollbackAsync();
-                    return new BadRequestObjectResult("Já existe pagamento registrado para este acesso.");
+                    return new BadRequestObjectResult("Já existe pagamento registrado para este acesso."); // Retorna 400 (ex.: duplo clique, para evitar que o cliente tente pagar duas vezes o mesmo acesso)
                 }
 
                 if (acesso.HoraSaida != null)
                 {
                     await transacao.RollbackAsync();
-                    return new BadRequestObjectResult("Este acesso já foi finalizado.");
+                    return new BadRequestObjectResult("Este acesso já foi finalizado."); // Retorna 400 (acesso já finalizado)
                 }
 
                 if (acesso.Veiculo == null || string.IsNullOrWhiteSpace(acesso.Veiculo.Placa))
                 {
                     await transacao.RollbackAsync();
-                    return new BadRequestObjectResult("Veículo ou placa não encontrados.");
+                    return new BadRequestObjectResult("Veículo ou placa não encontrados."); // Retorna 400 (veículo ou placa inválidos)
                 }
 
                 acesso.HoraSaida = DateTime.Now;
@@ -77,7 +78,8 @@ namespace EstacionamentoAPI.Services
                     DataHora = DateTime.Now,
                     ValorPago = tarifaCalculada.valorFinal,
                     FormaPagamento = dados.FormaPagamento,
-                    StatusPagamento = "Pago"
+                    StatusPagamento = StatusPagamentoEnum.Pago,
+                    RowVersion = 0 // O valor inicial da RowVersion é 0, o banco irá atualizar para o valor correto no INSERT
                 };
 
                 await _pagamentoRepository.Add(pagamento);
@@ -91,7 +93,7 @@ namespace EstacionamentoAPI.Services
             catch (Exception)
             {
                 await transacao.RollbackAsync();
-                return new StatusCodeResult(500); 
+                return new StatusCodeResult(500); // erro inesperado do servidor
             }
         }
 
@@ -103,15 +105,19 @@ namespace EstacionamentoAPI.Services
             var pagamentoAtual = await _pagamentoRepository.GetById(id);
             if (pagamentoAtual == null) return new NotFoundObjectResult("Pagamento não encontrado.");
 
+             // O EF Core compara com a RowVersion atual no banco para detectar concorrência
+            _context.Entry(pagamentoAtual)
+                .Property(p => p.RowVersion)
+                .OriginalValue = pagamento.RowVersion;
+
             pagamentoAtual.FormaPagamento = pagamento.FormaPagamento;
             pagamentoAtual.StatusPagamento = pagamento.StatusPagamento;
             pagamentoAtual.ValorPago = pagamento.ValorPago;
 
             try
             {
-                _pagamentoRepository.Update(pagamentoAtual);
-                
-                // Se o registro mudou no banco desde o GetById, o EF Core joga a exceção aqui
+                // Não é necessário chamar Update em uma entidade já rastreada.
+                // O EF Core já conhece o estado e usa o OriginalValue do RowVersion.
                 await _pagamentoRepository.SaveChanges();
                 
                 return new NoContentResult();
@@ -126,8 +132,7 @@ namespace EstacionamentoAPI.Services
         public async Task<IActionResult> ExcluirPagamento(int id)
         {
             var pagamento = await _pagamentoRepository.GetById(id);
-            if (pagamento == null) return new NotFoundObjectResult("Pagamento não encontrado.");
-
+            if (pagamento == null) return new NotFoundObjectResult("Pagamento não encontrado."); // Retorna 404 (o registro de pagamento não existe)
             _pagamentoRepository.Remove(pagamento);
             await _pagamentoRepository.SaveChanges();
             return new NoContentResult();

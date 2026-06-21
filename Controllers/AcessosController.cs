@@ -15,6 +15,7 @@ namespace EstacionamentoAPI.Controllers
             _acessoService = acessoService;
         }
 
+        // GET: api/Acessos
         [HttpGet]
         public async Task<IActionResult> GetAcessos()
         {
@@ -22,10 +23,20 @@ namespace EstacionamentoAPI.Controllers
             return Ok(acessos);
         }
 
+        // POST: api/Acessos/entrada
         [HttpPost("entrada")]
-        public async Task<IActionResult> RegistrarEntrada(DadosEntrada dados)
+        public async Task<IActionResult> RegistrarEntrada([FromBody] DadosEntrada dados)
         {
             return await _acessoService.RegistrarEntrada(dados);
+        }
+
+        // POST: api/Acessos/saida/1
+        [HttpPost("saida/{idAcesso}")]
+        public async Task<IActionResult> RegistrarSaida(
+            int idAcesso,
+            [FromBody] DadosSaida dados)
+        {
+            return await _acessoService.RegistrarSaida(idAcesso, dados);
         }
     }
 }

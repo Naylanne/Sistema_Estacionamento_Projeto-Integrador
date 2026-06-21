@@ -40,10 +40,10 @@ namespace EstacionamentoAPI.Models
         [Required]
         public string SenhaAcesso { get; set; } = string.Empty;
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public ICollection<Veiculo>? Veiculos { get; set; }
 
-        [Timestamp]
+        [ConcurrencyCheck]
         public uint RowVersion { get; set; }
     }
 }

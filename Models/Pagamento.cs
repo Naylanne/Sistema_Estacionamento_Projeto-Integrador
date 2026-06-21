@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using EstacionamentoAPI.Enums;
 
 namespace EstacionamentoAPI.Models
 {
@@ -23,12 +24,12 @@ namespace EstacionamentoAPI.Models
         public string FormaPagamento { get; set; } = "Dinheiro";
 
         [Required]
-        public string StatusPagamento { get; set; } = "Pendente";
+        public StatusPagamentoEnum StatusPagamento { get; set; } = StatusPagamentoEnum.Pendente;
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Acesso? Acesso { get; set; }
 
-        [Timestamp]
+        [ConcurrencyCheck]
         public uint RowVersion { get; set; }
     }
 }

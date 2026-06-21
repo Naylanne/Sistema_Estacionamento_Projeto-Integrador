@@ -25,6 +25,11 @@ namespace EstacionamentoAPI.Services
             return await _tarifaRepository.GetTarifas();
         }
 
+        public async Task<Tarifa?> GetTarifa(int id)
+        {
+            return await _tarifaRepository.GetById(id);
+        }
+
         public async Task<IActionResult> AtualizarTarifa(int id, Tarifa tarifa)
         {
             if (id != tarifa.IdTarifa)

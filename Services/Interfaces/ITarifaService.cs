@@ -7,6 +7,8 @@ namespace EstacionamentoAPI.Services.Interfaces
     {
         Task<IEnumerable<Tarifa>> GetTarifas();
 
+        Task<Tarifa?> GetTarifa(int id);
+
         Task<IActionResult> AtualizarTarifa(
             int id, Tarifa tarifa);
 

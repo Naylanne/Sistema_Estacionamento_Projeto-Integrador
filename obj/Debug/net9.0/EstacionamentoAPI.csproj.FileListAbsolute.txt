@@ -1,0 +1,9 @@
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.csproj.AssemblyReference.cache
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.AssemblyInfoInputs.cache
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.AssemblyInfo.cs
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.csproj.CoreCompileInputs.cache
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\nayla\OneDrive\Área de Trabalho\EstacionamentoAPI\obj\Debug\net9.0\EstacionamentoAPI.sourcelink.json

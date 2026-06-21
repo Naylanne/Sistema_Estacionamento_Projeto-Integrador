@@ -15,19 +15,19 @@ namespace EstacionamentoAPI.Models
         // FK Tarifa
         public int IdTarifa { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Tarifa? Tarifa { get; set; }
 
         // FK Vaga
         public int IdVaga { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Vaga? Vaga { get; set; }
 
         // FK Veículo
         public int IdVeiculo { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Veiculo? Veiculo { get; set; }
 
         [Required]
@@ -40,7 +40,7 @@ namespace EstacionamentoAPI.Models
         public TimeSpan? TempoPermanencia { get; set; }
 
         // Relação 1:1 com pagamento
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Pagamento? Pagamento { get; set; }
     }
 }

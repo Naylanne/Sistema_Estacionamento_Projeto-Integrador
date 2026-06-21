@@ -1,53 +1,49 @@
 using Microsoft.AspNetCore.Mvc;
-using EstacionamentoAPI.DTOs;
 using EstacionamentoAPI.Services.Interfaces;
 
 namespace EstacionamentoAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HistoricoController
-        : ControllerBase
+    public class HistoricoController : ControllerBase
     {
-        private readonly
-            IAcessoService
-            _acessoService;
+        private readonly IAcessoService _acessoService;
 
-        public HistoricoController(
-            IAcessoService acessoService)
+        public HistoricoController(IAcessoService acessoService)
         {
-            _acessoService =
-                acessoService;
+            _acessoService = acessoService;
         }
 
-        // POST:
-        // api/Historico/entrada
-        [HttpPost("entrada")]
-        public async Task<IActionResult>
-            RegistrarEntrada(
-                [FromBody]
-                DadosEntrada dados)
+        // GET: api/Historico
+        [HttpGet]
+        public async Task<IActionResult> GetHistorico()
         {
-            return await
-                _acessoService
-                    .RegistrarEntrada(
-                        dados);
+            var historico = await _acessoService.GetAcessos();
+            return Ok(historico);
         }
 
-        // POST:
-        // api/Historico/saida/1
-        [HttpPost("saida/{idAcesso}")]
-        public async Task<IActionResult>
-            RegistrarSaida(
-                int idAcesso,
-                [FromBody]
-                DadosSaida dados)
+        // GET: api/Historico/ativos
+        [HttpGet("ativos")]
+        public async Task<IActionResult> GetAcessosAtivos()
         {
-            return await
-                _acessoService
-                    .RegistrarSaida(
-                        idAcesso,
-                        dados);
+            var acessosAtivos = await _acessoService.GetAcessosAtivos();
+            return Ok(acessosAtivos);
+        }
+
+        // GET: api/Historico/finalizados
+        [HttpGet("finalizados")]
+        public async Task<IActionResult> GetAcessosFinalizados()
+        {
+            var acessosFinalizados = await _acessoService.GetAcessosFinalizados();
+            return Ok(acessosFinalizados);
+        }
+
+        // GET: api/Historico/com-pagamento
+        [HttpGet("com-pagamento")]
+        public async Task<IActionResult> GetHistoricoComPagamento()
+        {
+            var historico = await _acessoService.GetHistoricoComPagamento();
+            return Ok(historico);
         }
     }
 }

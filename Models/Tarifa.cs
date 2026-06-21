@@ -27,7 +27,7 @@ namespace EstacionamentoAPI.Models
         [Column(TypeName = "numeric(10,2)")]
         public decimal DescontoFuncionario { get; set; }
         
-        [Timestamp]
+        [ConcurrencyCheck]
         public uint RowVersion { get; set; }
     }
 }

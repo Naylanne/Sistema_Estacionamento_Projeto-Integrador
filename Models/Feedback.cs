@@ -18,7 +18,7 @@ namespace EstacionamentoAPI.Models
         [Column(TypeName = "timestamp")]
         public DateTime DataEnvio { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // Evita ciclo infinito no JSON
         public Usuario? Usuario { get; set; }
     
     }

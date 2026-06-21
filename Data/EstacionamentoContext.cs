@@ -70,7 +70,7 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(t => t.IdTarifa);
 
-                // CORREÇÃO: Mapeamento do xmin para PostgreSQL
+                // Mapeamento do xmin para PostgreSQL
                 entity.Property(t => t.RowVersion)
                       .HasColumnName("xmin")
                       .HasColumnType("xid")
@@ -173,7 +173,7 @@ namespace EstacionamentoAPI.Data
                     .WithMany()
                     .HasForeignKey(a => a.IdVeiculo);
 
-                // CORREÇÃO: Mantido apenas este relacionamento 1:1 limpo (os outros duplicados foram removidos)
+                // Relacionamento 1:1
                 entity.HasOne(a => a.Pagamento)
                     .WithOne(p => p.Acesso)
                     .HasForeignKey<Pagamento>(p => p.IdAcesso);
@@ -188,7 +188,11 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(p => p.IdPagamento);
 
-                // CORREÇÃO: Mapeamento do xmin para PostgreSQL
+                entity.Property(p => p.StatusPagamento)
+                      .HasColumnType("status_pagamento_enum")
+                      .HasColumnName("status_pagamento");
+
+                // Mapeia o xmin como token de concorrência
                 entity.Property(p => p.RowVersion)
                       .HasColumnName("xmin")
                       .HasColumnType("xid")
@@ -197,6 +201,9 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasIndex(p => p.IdAcesso)
                       .IsUnique();
+                entity.HasOne(p => p.Acesso)
+                        .WithOne(a => a.Pagamento)
+                        .HasForeignKey<Pagamento>(p => p.IdAcesso);
             });
 
             // ==================================================

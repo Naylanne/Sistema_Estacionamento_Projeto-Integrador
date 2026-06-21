@@ -1,38 +1,63 @@
 using EstacionamentoAPI.Data;
 using Microsoft.EntityFrameworkCore;
-using EstacionamentoAPI.Models;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using EstacionamentoAPI.Repositories;
 using EstacionamentoAPI.Repositories.Interfaces;
 using EstacionamentoAPI.Services;
 using EstacionamentoAPI.Services.Interfaces;
+using EstacionamentoAPI.Enums;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Adiciona serviços ao container.
-builder.Services.AddControllers();
-// Aprenda mais sobre configurar Swagger/OpenAPI em https://aka.ms/aspnetcore/swashbuckle
+// Configura também para aceitar enums como texto no JSON.
+// Exemplo: "statusPagamento": "Pago" em vez de "statusPagamento": 1
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+         // Converte enums para string
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+        // Garante suporte a acentos e caracteres Unicode
+        options.JsonSerializerOptions.Encoder = 
+            JavaScriptEncoder.Create(UnicodeRanges.All);
+    });
+
+// Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 1. Configuração do PostgreSQL
 // Pega a string de conexão do appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<EstacionamentoContext>(options =>
-    options.UseNpgsql(connectionString)
-           .UseSnakeCaseNamingConvention());
 
-// 2. Configuração de CORS (Permite que o Frontend acesse a API sem bloqueios)
+builder.Services.AddDbContext<EstacionamentoContext>(options =>
+    options.UseNpgsql(
+        connectionString,
+        npgsqlOptions =>
+        {
+            npgsqlOptions.MapEnum<StatusPagamentoEnum>("status_pagamento_enum");
+        })
+    .UseSnakeCaseNamingConvention());
+
+// 2. Injeção de dependência - Repositories
 builder.Services.AddScoped<IAcessoRepository, AcessoRepository>();
-builder.Services.AddScoped<IAcessoService, AcessoService>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
-builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<ITarifaRepository, TarifaRepository>();
-builder.Services.AddScoped<ITarifaService, TarifaService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IVagaRepository, VagaRepository>();
+
+// 3. Injeção de dependência - Services
+builder.Services.AddScoped<IAcessoService, AcessoService>();
+builder.Services.AddScoped<IPagamentoService, PagamentoService>();
+builder.Services.AddScoped<ITarifaService, TarifaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IVagaService, VagaService>();
 
+// 4. Configuração de CORS
+// Permite que o frontend acesse a API sem bloqueios
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -46,15 +71,20 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 3. Escopo para garantir criação do Banco (Opcional, mas bom para garantir)
+// 5. Escopo para testar conexão com o banco
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try 
+
+    try
     {
         var context = services.GetRequiredService<EstacionamentoContext>();
-        // Se quiser garantir que o banco existe ao rodar:
-        // context.Database.EnsureCreated(); 
+
+        // Se quiser garantir que o banco existe ao rodar, pode usar migrations:
+        // context.Database.Migrate();
+
+        // Evite usar EnsureCreated() junto com migrations.
+        // context.Database.EnsureCreated();
     }
     catch (Exception ex)
     {
@@ -69,12 +99,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 4. Configuração para servir o Frontend (Pasta wwwroot)
-app.UseDefaultFiles(); // Faz o sistema procurar por index.html, default.html, etc.
-app.UseStaticFiles();  // Permite servir arquivos estáticos (CSS, JS, Imagens)
+// 6. Configuração para servir o frontend da pasta wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
-// 5. ATENÇÃO: Comentado para evitar o erro "Failed to determine the https port"
-// app.UseHttpsRedirection(); 
+// Comentado para evitar erro "Failed to determine the https port"
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
