@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: estacionamento-postgres
+    environment:
+      POSTGRES_DB: EstacionamentoDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 3699
+    ports:
+      - "5432:5432"
+    volumes:
+      - estacionamento_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: estacionamento-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  estacionamento_pgdata:

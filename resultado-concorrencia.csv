@@ -1,0 +1,6 @@
+﻿"Placa","StatusCode","Resultado","PSComputerName","RunspaceId","PSShowComputerName"
+"CONC001","200","{""idAcesso"":7,""ticket"":""TKT-20260608125643478"",""placa"":""CONC001"",""idVaga"":2,""horaEntrada"":""2026-06-08T12:56:43.478982-03:00"",""mensagem"":""Entrada registrada com sucesso""}","localhost","1ac1113f-cb47-431d-9183-5c6034f50f12","False"
+"CONC002","409","Não há vagas disponíveis para Carro.","localhost","b42391a0-3611-4001-8eec-185dee6f9b55","False"
+"CONC003","409","Não há vagas disponíveis para Carro.","localhost","5893bc37-8e23-48bc-bd62-1db4cc5414f8","False"
+"CONC004","409","Não há vagas disponíveis para Carro.","localhost","e661eb2d-24f5-401c-857b-a68c9a2d0d30","False"
+"CONC005","409","Não há vagas disponíveis para Carro.","localhost","9a1d0bd2-922a-48b9-b6ff-a62c6dc1402a","False"
