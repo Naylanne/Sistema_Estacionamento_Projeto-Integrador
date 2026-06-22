@@ -36,7 +36,7 @@ namespace EstacionamentoAPI.Controllers
                 return BadRequest("Ticket de acesso não encontrado. A ocorrência deve estar vinculada a um veículo.");
             }
 
-            ocorrencia.DataHora = DateTime.UtcNow; // Força UTC para PostgreSQL
+            ocorrencia.DataHora = DateTime.Now; // Força UTC para PostgreSQL
             
             _context.Ocorrencias.Add(ocorrencia);
             await _context.SaveChangesAsync();

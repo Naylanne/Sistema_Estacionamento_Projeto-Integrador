@@ -21,7 +21,15 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="StackExchange.Redis" Version="3.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+  <Compile Remove="WorkerFila\**\*.cs" />
+  <Content Remove="WorkerFila\**\*" />
+  <EmbeddedResource Remove="WorkerFila\**\*" />
+  <None Remove="WorkerFila\**\*" />
+</ItemGroup>
 
 </Project>

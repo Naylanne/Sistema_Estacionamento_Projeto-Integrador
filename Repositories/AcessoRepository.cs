@@ -21,12 +21,14 @@ namespace EstacionamentoAPI.Repositories
             return await _context.Vagas
                 .FromSqlInterpolated($@"
                     SELECT *
-                    FROM ""Vagas""
-                    WHERE ""Status"" = 'Disponivel'
-                      AND LOWER(""TipoVaga"") = LOWER({tipoVeiculo})
+                    FROM vaga
+                    WHERE status = 'Disponivel'
+                      AND LOWER(tipo_vaga) = LOWER({tipoVeiculo})
+                    ORDER BY id_vaga
                     LIMIT 1
-                    FOR UPDATE")
-                .AsNoTracking()
+                    FOR UPDATE
+                ")
+                .AsTracking()
                 .FirstOrDefaultAsync();
         }
 
@@ -36,10 +38,10 @@ namespace EstacionamentoAPI.Repositories
             return await _context.Acessos
                 .FromSqlInterpolated($@"
                     SELECT *
-                    FROM ""Acessos""
-                    WHERE ""IdAcesso"" = {idAcesso}
+                    FROM acesso_veiculo
+                    WHERE ""id_acesso"" = {idAcesso}
                     FOR UPDATE")
-                .AsNoTracking()
+                .AsTracking()
                 .FirstOrDefaultAsync();
         }
 
@@ -48,10 +50,10 @@ namespace EstacionamentoAPI.Repositories
             return await _context.Vagas
                 .FromSqlInterpolated($@"
                     SELECT *
-                    FROM ""Vagas""
-                    WHERE ""IdVaga"" = {idVaga}
+                    FROM ""vaga""
+                    WHERE ""id_vaga"" = {idVaga}
                     FOR UPDATE")
-                .AsNoTracking()
+                .AsTracking()
                 .FirstOrDefaultAsync();
         }
 

@@ -36,17 +36,6 @@ namespace EstacionamentoAPI.Controllers
             return Ok(pagamento);
         }
 
-        [HttpPost("registrar")]
-        public async Task<IActionResult> RegistrarPagamento(int idAcesso, DadosSaida DTOs)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            return await _pagamentoService.RegistrarPagamento(idAcesso, DTOs);
-        }
-
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPagamento(
             int id,

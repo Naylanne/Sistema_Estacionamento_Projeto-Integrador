@@ -39,7 +39,7 @@ namespace EstacionamentoAPI.Controllers
                 return BadRequest("Usuário não identificado.");
             }
 
-            feedback.DataEnvio = DateTime.UtcNow; // Força UTC
+            feedback.DataEnvio = DateTime.Now; // Força UTC
             
             _context.Feedbacks.Add(feedback);
             await _context.SaveChangesAsync();

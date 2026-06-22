@@ -28,8 +28,8 @@ namespace EstacionamentoAPI.Repositories
         {
             return await _context.Vagas
                 .FromSqlInterpolated($@"
-                    SELECT * FROM ""Vagas""
-                    WHERE ""IdVaga"" = {id}
+                    SELECT * FROM ""vaga""
+                    WHERE ""id_vaga"" = {id}
                     FOR UPDATE")
                 .AsNoTracking() // Garante que o EF busque o dado recente do banco com o Lock ativo
                 .FirstOrDefaultAsync();

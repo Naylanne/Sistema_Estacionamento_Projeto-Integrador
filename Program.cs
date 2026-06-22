@@ -8,10 +8,12 @@ using EstacionamentoAPI.Services;
 using EstacionamentoAPI.Services.Interfaces;
 using EstacionamentoAPI.Enums;
 using System.Text.Json.Serialization;
+using StackExchange.Redis;
+using EstacionamentoAPI.Services.Fila;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona serviços ao container.
+// 1. Adiciona serviços ao container.
 // Configura também para aceitar enums como texto no JSON.
 // Exemplo: "statusPagamento": "Pago" em vez de "statusPagamento": 1
 builder.Services.AddControllers()
@@ -25,11 +27,11 @@ builder.Services.AddControllers()
             JavaScriptEncoder.Create(UnicodeRanges.All);
     });
 
-// Swagger/OpenAPI
+// 2. Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 1. Configuração do PostgreSQL
+// 3. Configuração do PostgreSQL
 // Pega a string de conexão do appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -42,21 +44,27 @@ builder.Services.AddDbContext<EstacionamentoContext>(options =>
         })
     .UseSnakeCaseNamingConvention());
 
-// 2. Injeção de dependência - Repositories
+// 4. Configuração do Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    return ConnectionMultiplexer.Connect("localhost:6379");
+});    
+
+// 5. Injeção de dependência - Repositories
 builder.Services.AddScoped<IAcessoRepository, AcessoRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<ITarifaRepository, TarifaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IVagaRepository, VagaRepository>();
 
-// 3. Injeção de dependência - Services
+// 6. Injeção de dependência - Services
 builder.Services.AddScoped<IAcessoService, AcessoService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<ITarifaService, TarifaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IVagaService, VagaService>();
 
-// 4. Configuração de CORS
+// 7. Configuração de CORS
 // Permite que o frontend acesse a API sem bloqueios
 builder.Services.AddCors(options =>
 {
@@ -71,7 +79,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 5. Escopo para testar conexão com o banco
+// 8. Escopo para testar conexão com o banco
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -92,14 +100,14 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configura o pipeline de requisição HTTP.
+// 9. Configura o pipeline de requisição HTTP.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// 6. Configuração para servir o frontend da pasta wwwroot
+// 10. Configuração para servir o frontend da pasta wwwroot
 app.UseDefaultFiles();
 app.UseStaticFiles();
 

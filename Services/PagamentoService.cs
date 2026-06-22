@@ -78,7 +78,7 @@ namespace EstacionamentoAPI.Services
                     DataHora = DateTime.Now,
                     ValorPago = tarifaCalculada.valorFinal,
                     FormaPagamento = dados.FormaPagamento,
-                    StatusPagamento = StatusPagamentoEnum.Pago,
+                    StatusPagamento = StatusPagamentoEnum.Concluido,
                     RowVersion = 0 // O valor inicial da RowVersion é 0, o banco irá atualizar para o valor correto no INSERT
                 };
 

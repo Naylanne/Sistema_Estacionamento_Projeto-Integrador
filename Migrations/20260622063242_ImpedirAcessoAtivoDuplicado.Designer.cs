@@ -4,6 +4,7 @@ using EstacionamentoAPI.Data;
 using EstacionamentoAPI.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EstacionamentoAPI.Migrations
 {
     [DbContext(typeof(EstacionamentoContext))]
-    partial class EstacionamentoContextModelSnapshot : ModelSnapshot
+    [Migration("20260622063242_ImpedirAcessoAtivoDuplicado")]
+    partial class ImpedirAcessoAtivoDuplicado
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
