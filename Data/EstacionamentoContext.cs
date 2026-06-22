@@ -151,6 +151,12 @@ namespace EstacionamentoAPI.Data
 
                 entity.HasKey(a => a.IdAcesso);
 
+                 // Impede dois acessos ativos para o mesmo veículo
+                 entity.HasIndex(a => a.IdVeiculo)
+                       .IsUnique()
+                       .HasFilter("hora_saida IS NULL")
+                       .HasDatabaseName("ix_acesso_veiculo_ativo_unico");
+               
                 entity.HasIndex(a => a.Ticket)
                     .IsUnique();
 

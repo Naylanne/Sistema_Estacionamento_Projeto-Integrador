@@ -7,13 +7,11 @@ namespace EstacionamentoAPI.Enums
         [PgName("pendente")]
         Pendente,
 
-        [PgName("pago")]
-        Pago,
-
         [PgName("concluido")]
         Concluido,
 
         [PgName("cancelado")]
         Cancelado
     }
+
 }
